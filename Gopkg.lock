@@ -50,14 +50,6 @@
   revision = "22d885f9ecc78bf4ee5d72b937e4bbcdc58e8cae"
 
 [[projects]]
-  branch = "master"
-  digest = "1:2b0df69b0d482719446858d567d12f4565d1908ff563db27250cb2cde7f461ec"
-  name = "github.com/gin-contrib/static"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "8cbcdde04781ade853025b0ff7001aaf0ed06150"
-
-[[projects]]
   digest = "1:d5083934eb25e45d17f72ffa86cae3814f4a9d6c073c4f16b64147169b245606"
   name = "github.com/gin-gonic/gin"
   packages = [
@@ -102,6 +94,22 @@
   pruneopts = "UT"
   revision = "aa810b61a9c79d51363740d207bb46cf8e620ed5"
   version = "v1.2.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:4d213c1faa284634054e52465bd94d72a6b4fcd792cecf6cef357bdc3c84f745"
+  name = "github.com/gonum/floats"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "7de1f4ea7ab57890bfd427af68c7994cd67975d4"
+
+[[projects]]
+  branch = "master"
+  digest = "1:2f6b9df94963c1cad2f5d901cd54cbeb51ccc8af275fb8007f1a506c076c3946"
+  name = "github.com/gonum/internal"
+  packages = ["asm/f64"]
+  pruneopts = "UT"
+  revision = "fda53f8d25717c07e2dac25758075a182bd74235"
 
 [[projects]]
   digest = "1:7b5c6e2eeaa9ae5907c391a91c132abfd5c9e8a784a341b5625e750c67e6825d"
@@ -149,6 +157,17 @@
   pruneopts = "UT"
   revision = "389de31c961831de0a9f4172173337d4a6193909"
   version = "v1.6.3"
+
+[[projects]]
+  branch = "master"
+  digest = "1:8d3b90b50fca740b0449f32b8d44cc5b7a320ffa4a007d96c36cd546ab04b23e"
+  name = "github.com/james-bowman/sparse"
+  packages = [
+    ".",
+    "blas",
+  ]
+  pruneopts = "UT"
+  revision = "c6ecffa64028509e43926f5490dead9a2505e974"
 
 [[projects]]
   branch = "master"
@@ -255,6 +274,14 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:274f67cb6fed9588ea2521ecdac05a6d62a8c51c074c1fccc6a49a40ba80e925"
+  name = "github.com/satori/go.uuid"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
+  version = "v1.2.0"
+
+[[projects]]
   branch = "master"
   digest = "1:7ca2584fa7da0520cd2d1136a10194fe5a5b220bdb215074ab6f7b5ad91115f4"
   name = "github.com/shurcooL/httpfs"
@@ -269,6 +296,14 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "a97a25d856cadfe6481325baeb35a70d6723ca0c"
+
+[[projects]]
+  digest = "1:919bb3aa6d9d0b67648c219fa4925312bc3c2872da19e818fa769e9c97a2b643"
+  name = "github.com/spaolacci/murmur3"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "9f5d223c60793748f04a9d5b4b4eacddfc1f755d"
+  version = "v1.1"
 
 [[projects]]
   digest = "1:6a4a11ba764a56d2758899ec6f3848d24698d48442ebce85ee7a3f63284526cd"
@@ -430,6 +465,27 @@
   version = "v0.3.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:d313e0cafba0ee62e04a4c1650d7fbbb1d78bd5ff938899976d5acbc145c7aac"
+  name = "gonum.org/v1/gonum"
+  packages = [
+    "blas",
+    "blas/blas64",
+    "blas/gonum",
+    "floats",
+    "internal/asm/c128",
+    "internal/asm/f32",
+    "internal/asm/f64",
+    "internal/math32",
+    "lapack",
+    "lapack/gonum",
+    "lapack/lapack64",
+    "mat",
+  ]
+  pruneopts = "UT"
+  revision = "400065bf7646f22e413f120f28a72777e7773518"
+
+[[projects]]
   digest = "1:cbc72c4c4886a918d6ab4b95e347ffe259846260f99ebdd8a198c2331cf2b2e9"
   name = "gopkg.in/go-playground/validator.v8"
   packages = ["."]
@@ -461,20 +517,22 @@
     "github.com/emersion/go-upnp-igd",
     "github.com/fatih/structs",
     "github.com/gin-contrib/cors",
-    "github.com/gin-contrib/static",
     "github.com/gin-gonic/gin",
     "github.com/gin-gonic/gin/render",
     "github.com/go-resty/resty",
     "github.com/gobwas/glob",
     "github.com/gorilla/websocket",
     "github.com/influxdata/influxdb/client/v2",
+    "github.com/james-bowman/sparse",
     "github.com/jinzhu/copier",
     "github.com/mitchellh/go-homedir",
     "github.com/mitchellh/mapstructure",
     "github.com/mr-tron/base58/base58",
     "github.com/pkg/errors",
     "github.com/pkg/profile",
+    "github.com/satori/go.uuid",
     "github.com/shurcooL/vfsgen",
+    "github.com/spaolacci/murmur3",
     "github.com/spf13/cobra",
     "github.com/spf13/viper",
     "github.com/stretchr/testify/assert",
@@ -483,6 +541,7 @@
     "go.uber.org/zap",
     "go.uber.org/zap/zapcore",
     "golang.org/x/crypto/sha3",
+    "gonum.org/v1/gonum/mat",
     "gopkg.in/inconshreveable/go-keen.v0",
   ]
   solver-name = "gps-cdcl"
