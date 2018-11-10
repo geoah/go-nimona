@@ -2,6 +2,14 @@
 
 
 [[projects]]
+  branch = "master"
+  digest = "1:f9243cde6f0b1e0d823de50eeb77f18681b3a649760073357fa951f51a55e947"
+  name = "github.com/britram/borat"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f891bcfcfb9b69c58b8348ec13eadad5bf2a5a2d"
+
+[[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -16,14 +24,6 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "6fb51d2a2a533cabb08119a9d05fe3f6b4c513f3"
-
-[[projects]]
-  digest = "1:ca82a3b99694824c627573c2a76d0e49719b4a9c02d1d85a2ac91f1c1f52ab9b"
-  name = "github.com/fatih/structs"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "a720dfa8df582c51dee1b36feabb906bde1588bd"
-  version = "v1.0"
 
 [[projects]]
   digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"
@@ -48,14 +48,6 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "22d885f9ecc78bf4ee5d72b937e4bbcdc58e8cae"
-
-[[projects]]
-  branch = "master"
-  digest = "1:2b0df69b0d482719446858d567d12f4565d1908ff563db27250cb2cde7f461ec"
-  name = "github.com/gin-contrib/static"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "8cbcdde04781ade853025b0ff7001aaf0ed06150"
 
 [[projects]]
   digest = "1:d5083934eb25e45d17f72ffa86cae3814f4a9d6c073c4f16b64147169b245606"
@@ -191,12 +183,13 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:645110e089152bd0f4a011a2648fbb0e4df5977be73ca605781157ac297f50c4"
+  branch = "master"
+  digest = "1:e49c6ef5e58b9bd641c1911062bc07f4d2c1f6c4d77e1340a7ade05f688ac6b2"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
   pruneopts = "UT"
-  revision = "fa473d140ef3c6adf42d6b391fe76707f1f243c8"
-  version = "v1.0.0"
+  revision = "bf4a414708fc0bd342b09ba68bdb9e0b90ad849b"
+  source = "github.com/perenecabuto/mapstructure"
 
 [[projects]]
   digest = "1:33422d238f147d247752996a26574ac48dcf472976eda7f5134015f06bf16563"
@@ -430,6 +423,14 @@
   version = "v0.3.0"
 
 [[projects]]
+  digest = "1:653e04c4515b37169ef5874d752f4254e63b4aedb5c8b3a4118e9e3a4e3503e1"
+  name = "gopkg.in/d4l3k/messagediff.v1"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "29f32d820d112dbd66e58492a6ffb7cc3106312b"
+  version = "v1.2.1"
+
+[[projects]]
   digest = "1:cbc72c4c4886a918d6ab4b95e347ffe259846260f99ebdd8a198c2331cf2b2e9"
   name = "gopkg.in/go-playground/validator.v8"
   packages = ["."]
@@ -457,11 +458,10 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/britram/borat",
     "github.com/davecgh/go-spew/spew",
     "github.com/emersion/go-upnp-igd",
-    "github.com/fatih/structs",
     "github.com/gin-contrib/cors",
-    "github.com/gin-contrib/static",
     "github.com/gin-gonic/gin",
     "github.com/gin-gonic/gin/render",
     "github.com/go-resty/resty",
@@ -483,6 +483,7 @@
     "go.uber.org/zap",
     "go.uber.org/zap/zapcore",
     "golang.org/x/crypto/sha3",
+    "gopkg.in/d4l3k/messagediff.v1",
     "gopkg.in/inconshreveable/go-keen.v0",
   ]
   solver-name = "gps-cdcl"
