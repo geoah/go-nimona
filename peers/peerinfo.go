@@ -1,46 +1,14 @@
 package peers
 
 import (
-	"github.com/mitchellh/mapstructure"
-	ucodec "github.com/ugorji/go/codec"
-
-	"nimona.io/go/primitives"
+	"nimona.io/go/crypto"
 )
 
 // PeerInfo holds the information exchange needs to connect to a remote peer
+//proteus:generate
 type PeerInfo struct {
-	Addresses []string `mapstructure:"addresses"`
-	Signature *primitives.Signature
-}
-
-func (pi *PeerInfo) Block() *primitives.Block {
-	return &primitives.Block{
-		Type: "nimona.io/peer.info",
-		Payload: map[string]interface{}{
-			"addresses": pi.Addresses,
-		},
-		Signature: pi.Signature,
-	}
-}
-
-func (pi *PeerInfo) FromBlock(block *primitives.Block) {
-	if err := mapstructure.Decode(block.Payload, pi); err != nil {
-		panic(err)
-	}
-	pi.Signature = block.Signature
-}
-
-// CodecDecodeSelf helper for cbor unmarshaling
-func (pi *PeerInfo) CodecDecodeSelf(dec *ucodec.Decoder) {
-	b := &primitives.Block{}
-	dec.MustDecode(b)
-	pi.FromBlock(b)
-}
-
-// CodecEncodeSelf helper for cbor marshaling
-func (pi *PeerInfo) CodecEncodeSelf(enc *ucodec.Encoder) {
-	b := pi.Block()
-	enc.MustEncode(b)
+	Addresses []string          `json:"addresses"`
+	Signature *crypto.Signature `json:"@sig"`
 }
 
 func (pi *PeerInfo) Thumbprint() string {

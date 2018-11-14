@@ -15,3 +15,10 @@ func CborHandler() *codec.CborHandle {
 	ch.TimeRFC3339 = true
 	return ch
 }
+
+// RawCborHandler for un/marshaling raw blocks
+func RawCborHandler() *codec.CborHandle {
+	ch := CborHandler()
+	ch.Raw = true
+	return ch
+}

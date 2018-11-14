@@ -6,13 +6,12 @@ import (
 	"log"
 	"os"
 
-	"nimona.io/go/primitives"
+	"nimona.io/go/crypto"
 )
 
 type Exchanger interface {
-	Send(ctx context.Context, o *primitives.Block, address string,
-		opts ...primitives.SendOption) error
-	Handle(contentType string, h func(o *primitives.Block) error) (func(), error)
+	Send(ctx context.Context, o interface{}, address string) error
+	Handle(contentType string, h func(o interface{}) error) (func(), error)
 }
 
 const connectionEventType = "nimona.io/telemetry.connection"
@@ -23,7 +22,7 @@ var DefaultClient *metrics
 type metrics struct {
 	exchange     Exchanger
 	colletor     Collector
-	localPeer    *primitives.Key
+	localPeer    *crypto.Key
 	statsAddress string
 }
 
@@ -45,7 +44,7 @@ func init() {
 	}
 }
 
-func NewTelemetry(exchange Exchanger, localPeer *primitives.Key,
+func NewTelemetry(exchange Exchanger, localPeer *crypto.Key,
 	statsAddress string) error {
 
 	// create the default client
@@ -76,20 +75,15 @@ func SendEvent(ctx context.Context, event Collectable) error {
 
 func (t *metrics) SendEvent(ctx context.Context,
 	event Collectable) error {
-	return t.exchange.Send(ctx,
-		event.Block(), t.statsAddress, primitives.SignWith(t.localPeer))
+	return t.exchange.Send(ctx, event, t.statsAddress)
 }
 
-func (t *metrics) handleBlock(block *primitives.Block) error {
-	switch block.Type {
-	case connectionEventType:
-		event := &ConnectionEvent{}
-		event.FromBlock(block)
-		t.colletor.Collect(event)
-	case blockEventType:
-		event := &BlockEvent{}
-		event.FromBlock(block)
-		t.colletor.Collect(event)
+func (t *metrics) handleBlock(block interface{}) error {
+	switch v := block.(type) {
+	case *ConnectionEvent:
+		t.colletor.Collect(v)
+	case *BlockEvent:
+		t.colletor.Collect(v)
 	}
 
 	return nil

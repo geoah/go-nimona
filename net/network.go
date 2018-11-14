@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net"
 	"os"
 	"strconv"
@@ -17,10 +16,10 @@ import (
 	ucodec "github.com/ugorji/go/codec"
 	"go.uber.org/zap"
 
-	"nimona.io/go/codec"
+	"nimona.io/go/crypto"
+	"nimona.io/go/encoding"
 	"nimona.io/go/log"
 	"nimona.io/go/peers"
-	"nimona.io/go/primitives"
 )
 
 // Networker interface for mocking Network
@@ -92,22 +91,27 @@ func (n *Network) Dial(ctx context.Context, address string) (*Connection, error)
 			Nonce:    nonce,
 			PeerInfo: n.addressBook.GetLocalPeerInfo(),
 		}
-		synBlock := syn.Block()
-		if err := primitives.Sign(synBlock, signer); err != nil {
-			return nil, err
-		}
-
-		if err := Write(synBlock, conn); err != nil {
-			return nil, err
-		}
-
-		blockSynAck, err := Read(conn)
+		sig, err := crypto.Sign(syn, signer)
 		if err != nil {
 			return nil, err
 		}
 
-		synAck := &HandshakeSynAck{}
-		synAck.FromBlock(blockSynAck)
+		syn.Signature = sig
+
+		if err := Write(syn, conn); err != nil {
+			return nil, err
+		}
+
+		synAckIf, err := Read(conn)
+		if err != nil {
+			return nil, err
+		}
+
+		synAck, ok := synAckIf.(*HandshakeSynAck)
+		if !ok {
+			return nil, errors.New("unexpected syn ack block")
+		}
+
 		if synAck.Nonce != nonce {
 			return nil, errors.New("invalid handhshake.syn-ack")
 		}
@@ -121,11 +125,14 @@ func (n *Network) Dial(ctx context.Context, address string) (*Connection, error)
 		ack := &HandshakeAck{
 			Nonce: nonce,
 		}
-		ackBlock := ack.Block()
-		if err := primitives.Sign(ackBlock, signer); err != nil {
+		sig, err = crypto.Sign(ack, signer)
+		if err != nil {
 			return nil, err
 		}
-		if err := Write(ackBlock, conn); err != nil {
+
+		ack.Signature = sig
+
+		if err := Write(ack, conn); err != nil {
 			return nil, err
 		}
 
@@ -201,17 +208,21 @@ func (n *Network) Listen(ctx context.Context, address string) (chan *Connection,
 				RemoteID: "unknown: handshaking",
 			}
 
-			blockSyn, err := Read(conn)
+			synIf, err := Read(conn)
 			if err != nil {
 				log.DefaultLogger.Warn("waiting for syn failed", zap.Error(err))
 				// TODO close conn?
 				continue
 			}
 
+			syn, ok := synIf.(*HandshakeSyn)
+			if !ok {
+				// TODO close conn?
+				continue
+			}
+
 			// TODO check type
 
-			syn := &HandshakeSyn{}
-			syn.FromBlock(blockSyn)
 			nonce := syn.Nonce
 
 			// store the peer on the other side
@@ -223,27 +234,32 @@ func (n *Network) Listen(ctx context.Context, address string) (chan *Connection,
 				Nonce:    nonce,
 				PeerInfo: n.addressBook.GetLocalPeerInfo(),
 			}
-			synAckBlock := synAck.Block()
-			if err := primitives.Sign(synAckBlock, signer); err != nil {
+			sig, err := crypto.Sign(synAck, signer)
+			if err != nil {
 				log.DefaultLogger.Warn("could not sigh for syn ack block", zap.Error(err))
 				// TODO close conn?
 				continue
 			}
-			if err := Write(synAckBlock, conn); err != nil {
+			synAck.Signature = sig
+			if err := Write(synAck, conn); err != nil {
 				log.DefaultLogger.Warn("sending for syn-ack failed", zap.Error(err))
 				// TODO close conn?
 				continue
 			}
 
-			blockAck, err := Read(conn)
+			ackIf, err := Read(conn)
 			if err != nil {
 				log.DefaultLogger.Warn("waiting for ack failed", zap.Error(err))
 				// TODO close conn?
 				continue
 			}
 
-			ack := &HandshakeAck{}
-			ack.FromBlock(blockAck)
+			ack, ok := ackIf.(*HandshakeAck)
+			if !ok {
+				// TODO close conn?
+				continue
+			}
+
 			if ack.Nonce != nonce {
 				log.DefaultLogger.Warn("validating syn to ack nonce failed")
 				// TODO close conn?
@@ -258,14 +274,14 @@ func (n *Network) Listen(ctx context.Context, address string) (chan *Connection,
 	return cconn, nil
 }
 
-func Write(p *primitives.Block, conn *Connection) error {
+func Write(p interface{}, conn *Connection) error {
 	conn.Conn.SetWriteDeadline(time.Now().Add(time.Second))
 	if p == nil {
 		log.DefaultLogger.Error("block for fw cannot be nil")
 		return errors.New("missing block")
 	}
 
-	b, err := primitives.Marshal(p)
+	b, err := encoding.Marshal(p)
 	if err != nil {
 		return err
 	}
@@ -276,59 +292,65 @@ func Write(p *primitives.Block, conn *Connection) error {
 
 	SendBlockEvent(
 		"incoming",
-		p.Type,
+		encoding.GetType(p),
 		len(b),
 	)
 
 	if os.Getenv("DEBUG_BLOCKS") == "true" {
-		b, _ := json.MarshalIndent(primitives.BlockToMap(p), "", "  ")
+		m := map[string]interface{}{}
+		encoding.UnmarshalSimple(b, &m)
+		b, _ := json.MarshalIndent(m, "", "  ")
 		log.DefaultLogger.Info(string(b), zap.String("remoteID", conn.RemoteID), zap.String("direction", "outgoing"))
 	}
 	return nil
 }
 
-func Read(conn *Connection) (*primitives.Block, error) {
+func Read(conn *Connection) (interface{}, error) {
 	logger := log.DefaultLogger
 
-	pDecoder := ucodec.NewDecoder(conn.Conn, codec.CborHandler())
-	b := &primitives.Block{}
-	if err := pDecoder.Decode(&b); err != nil {
+	pDecoder := ucodec.NewDecoder(conn.Conn, encoding.RawCborHandler())
+	r := ucodec.Raw{}
+	if err := pDecoder.Decode(&r); err != nil {
 		return nil, err
 	}
 
 	defer func() {
 		if r := recover(); r != nil {
-			spew.Dump(b)
+			spew.Dump(r)
 			logger.Error("Recovered while processing", zap.Any("r", r))
 		}
 	}()
 
-	d, err := b.Digest()
+	v, err := encoding.Unmarshal(r)
 	if err != nil {
 		return nil, err
 	}
 
-	if b.Signature != nil {
-		if err := primitives.Verify(b.Signature, d); err != nil {
-			return nil, err
-		}
-	} else {
-		fmt.Println("--------------------------------------------------------")
-		fmt.Println("----- BLOCK NOT SIGNED ---------------------------------")
-		fmt.Println("--------------------------------------------------------")
-		fmt.Println("-----", b.Type)
-		fmt.Println("-----", b.Payload)
-		fmt.Println("--------------------------------------------------------")
-	}
+	// TODO(geoah) fix sig
+	// if b.Signature != nil {
+	// 	if err := crypto.Verify(b.Signature, d); err != nil {
+	// 		return nil, err
+	// 	}
+	// } else {
+	// 	fmt.Println("--------------------------------------------------------")
+	// 	fmt.Println("----- BLOCK NOT SIGNED ---------------------------------")
+	// 	fmt.Println("--------------------------------------------------------")
+	// 	fmt.Println("-----", b.Type)
+	// 	fmt.Println("-----", b.Payload)
+	// 	fmt.Println("--------------------------------------------------------")
+	// }
 
 	SendBlockEvent(
 		"incoming",
-		b.Type,
+		encoding.GetType(v),
 		pDecoder.NumBytesRead(),
 	)
 	if os.Getenv("DEBUG_BLOCKS") == "true" {
-		bs, _ := json.MarshalIndent(primitives.BlockToMap(b), "", "  ")
-		logger.Info(string(bs), zap.String("remoteID", conn.RemoteID), zap.String("direction", "incoming"))
+		b, _ := encoding.Marshal(v)
+		m := map[string]interface{}{}
+		encoding.UnmarshalSimple(b, &m)
+		b, _ = json.MarshalIndent(m, "", "  ")
+		logger.Info(string(b), zap.String("remoteID", conn.RemoteID), zap.String("direction", "incoming"))
 	}
-	return b, nil
+	return v, nil
 }

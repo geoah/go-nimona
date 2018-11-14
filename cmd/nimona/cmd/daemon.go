@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/user"
 	"path"
@@ -55,6 +54,7 @@ var daemonCmd = &cobra.Command{
 			daemonConfigPath = path.Join(usr.HomeDir, ".nimona")
 		}
 
+		cmd.Println("Using config in", daemonConfigPath)
 		if err := os.MkdirAll(daemonConfigPath, 0777); err != nil {
 			return errors.Wrap(err, "could not create config dir")
 		}
@@ -64,10 +64,26 @@ var daemonCmd = &cobra.Command{
 			return errors.Wrap(err, "could not load key")
 		}
 
+		if len(bootstrapAddresses) > 0 {
+			cmd.Println("Adding bootstrap nodes")
+			for _, v := range bootstrapAddresses {
+				cmd.Println("  *", v)
+			}
+		} else {
+			cmd.Println("No bootstrap nodes provided")
+		}
+
 		addressBook.LocalHostname = announceHostname
 
 		if daemonEnableRelaying {
-			addressBook.AddLocalPeerRelay(bootstrapAddresses...)
+			if len(bootstrapAddresses) > 0 {
+				cmd.Println("Relaying enabled, using bootstrap nodes")
+				addressBook.AddLocalPeerRelay(bootstrapAddresses...)
+			} else {
+				cmd.Println("Relaying not enabled, no bootstrap nodes provided")
+			}
+		} else {
+			cmd.Println("Relaying not enabled")
 		}
 
 		storagePath := path.Join(daemonConfigPath, "storage")
@@ -81,16 +97,18 @@ var daemonCmd = &cobra.Command{
 		peerAddress := fmt.Sprintf("0.0.0.0:%d", daemonAPIPort)
 		apiAddress := fmt.Sprintf("http://localhost:%d", daemonAPIPort)
 
-		log.Println("Started daemon.")
-		log.Println("* Peer key:", addressBook.GetLocalPeerInfo().Thumbprint())
+		cmd.Println("Started daemon")
+		cmd.Println("* Peer keys:\n  *", addressBook.GetLocalPeerInfo().Thumbprint())
 		peerAddresses := addressBook.GetLocalPeerAddresses()
+		cmd.Println("* Peer addresses:")
 		if len(peerAddresses) > 0 {
-			log.Println("* Peer addresses:")
 			for _, addr := range addressBook.GetLocalPeerAddresses() {
-				log.Println("  *", addr)
+				cmd.Println("  *", addr)
 			}
+		} else {
+			cmd.Println("  * No addresses available")
 		}
-		log.Println("* HTTP API address:", apiAddress)
+		cmd.Println("* HTTP API address:\n  *", apiAddress)
 
 		api := api.New(addressBook, dht, n, dpr)
 		err = api.Serve(peerAddress)
@@ -134,5 +152,12 @@ func init() {
 		"bootstraps",
 		bootstrapAddresses,
 		"bootstrap addresses",
+	)
+
+	daemonCmd.PersistentFlags().StringVar(
+		&daemonConfigPath,
+		"daemon-config",
+		"",
+		"daemon config path",
 	)
 }

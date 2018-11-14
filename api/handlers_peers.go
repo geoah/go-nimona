@@ -14,7 +14,7 @@ func (api *API) HandleGetPeers(c *gin.Context) {
 	}
 	ms := []map[string]interface{}{}
 	for _, v := range peers {
-		ms = append(ms, api.mapBlock(v.Block()))
+		ms = append(ms, api.mapBlock(v))
 	}
 	c.Render(http.StatusOK, Renderer(c, ms))
 }
@@ -26,6 +26,6 @@ func (api *API) HandleGetPeer(c *gin.Context) {
 		c.AbortWithError(500, err)
 		return
 	}
-	ms := api.mapBlock(m.Block())
+	ms := api.mapBlock(m)
 	c.Render(http.StatusOK, Renderer(c, ms))
 }

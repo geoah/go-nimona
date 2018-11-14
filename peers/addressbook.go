@@ -7,8 +7,8 @@ import (
 
 	"go.uber.org/zap"
 
+	"nimona.io/go/crypto"
 	"nimona.io/go/log"
-	"nimona.io/go/primitives"
 )
 
 type peerStatus struct {
@@ -52,7 +52,7 @@ func NewAddressBook(configPath string) (*AddressBook, error) {
 
 // AddressBook holds our private peer as well as all known remote peers
 type AddressBook struct {
-	localKey       *primitives.Key
+	localKey       *crypto.Key
 	LocalHostname  string
 	localAddresses sync.Map
 	localRelays    sync.Map
@@ -63,7 +63,7 @@ type AddressBook struct {
 
 // GetLocalPeerKey returns the local peer's key
 // TODO make this an attribute, is there any reason for this to be a method?
-func (ab *AddressBook) GetLocalPeerKey() *primitives.Key {
+func (ab *AddressBook) GetLocalPeerKey() *crypto.Key {
 	return ab.localKey
 }
 
@@ -94,12 +94,12 @@ func (ab *AddressBook) GetLocalPeerInfo() *PeerInfo {
 		Addresses: addresses,
 	}
 
-	piBlock := pi.Block()
-	if err := primitives.Sign(piBlock, ab.GetLocalPeerKey()); err != nil {
+	sig, err := crypto.Sign(pi, ab.GetLocalPeerKey())
+	if err != nil {
 		panic(err)
 	}
 
-	pi.Signature = piBlock.Signature
+	pi.Signature = sig
 	return pi
 }
 
@@ -210,11 +210,11 @@ func (ab *AddressBook) GetLocalPeerRelays() []string {
 	return relays
 }
 
-func (ab *AddressBook) SetAlias(k *primitives.Key, v string) {
+func (ab *AddressBook) SetAlias(k *crypto.Key, v string) {
 	ab.aliases.Store(k, v)
 }
 
-func (ab *AddressBook) GetAlias(k *primitives.Key) string {
+func (ab *AddressBook) GetAlias(k *crypto.Key) string {
 	v, ok := ab.aliases.Load(k)
 	if !ok {
 		return k.Thumbprint()

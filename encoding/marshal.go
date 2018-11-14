@@ -14,7 +14,7 @@ var (
 func Marshal(v interface{}) ([]byte, error) {
 	rt := GetType(reflect.TypeOf(v))
 	mt, ok := v.(map[string]interface{})
-	if rt == "" && ok && mt[attrCtx].(string) == "" {
+	if rt == "" && ok && mt[attrCtx] != nil && mt[attrCtx].(string) == "" {
 		return nil, ErrMissingType
 	}
 

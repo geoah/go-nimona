@@ -5,8 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"nimona.io/go/codec"
-	"nimona.io/go/primitives"
+	"nimona.io/go/crypto"
+	"nimona.io/go/encoding"
 )
 
 // blockListCmd represents the blockList command
@@ -21,8 +21,8 @@ var blockListCmd = &cobra.Command{
 		}
 
 		body := resp.Body()
-		blocks := []*primitives.Block{}
-		if err := codec.Unmarshal(body, &blocks); err != nil {
+		blocks := []map[string]interface{}{}
+		if err := encoding.UnmarshalInto(body, &blocks); err != nil {
 			return err
 		}
 
@@ -38,10 +38,10 @@ var blockListCmd = &cobra.Command{
 
 		for _, block := range blocks {
 			cmd.Println("block:")
-			cmd.Println("  id:", block.ID())
-			cmd.Println("  type:", block.Type)
-			cmd.Println("  payload:", block.Payload)
-			cmd.Println("  signer:", block.Signature.Key.Thumbprint())
+			cmd.Println("  _id:", crypto.ID(block))
+			for k, v := range block {
+				cmd.Printf("  %s: %v\n", k, v)
+			}
 			cmd.Println("")
 		}
 		return nil

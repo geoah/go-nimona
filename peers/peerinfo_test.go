@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"nimona.io/go/base58"
-	"nimona.io/go/codec"
-	"nimona.io/go/primitives"
+	"nimona.io/go/crypto"
+	"nimona.io/go/encoding"
 )
 
 func TestPeerInfoBlock(t *testing.T) {
@@ -16,18 +16,18 @@ func TestPeerInfoBlock(t *testing.T) {
 			"p1-addr1",
 			"p1-addr2",
 		},
-		Signature: &primitives.Signature{
-			Key: &primitives.Key{
+		Signature: &crypto.Signature{
+			Key: &crypto.Key{
 				Algorithm: "key-alg",
 			},
 			Alg: "sig-alg",
 		},
 	}
 
-	b := ep.Block()
-	bs, _ := primitives.Marshal(b)
+	b := ep
+	bs, _ := encoding.Marshal(b)
 
-	b2, err := primitives.Unmarshal(bs)
+	b2, err := encoding.Unmarshal(bs)
 	assert.NoError(t, err)
 
 	p := &PeerInfo{}
@@ -42,15 +42,15 @@ func TestPeerInfoSelfEncode(t *testing.T) {
 			"p1-addr1",
 			"p1-addr2",
 		},
-		Signature: &primitives.Signature{
-			Key: &primitives.Key{
+		Signature: &crypto.Signature{
+			Key: &crypto.Key{
 				Algorithm: "key-alg",
 			},
 			Alg: "sig-alg",
 		},
 	}
 
-	bs, err := codec.Marshal(eb)
+	bs, err := encoding.Marshal(eb)
 	assert.NoError(t, err)
 
 	assert.Equal(t, base58.Encode(bs), "BvE6Qe57DKXhLXzNVg4HeDf6Gv3jFAmZzixdtB"+
@@ -59,7 +59,7 @@ func TestPeerInfoSelfEncode(t *testing.T) {
 		"UPArU2ze2Yy7jhpib1YxGNZv89WAACh9E4fRRbDQmWaoMf2BLiS")
 
 	b := &PeerInfo{}
-	err = codec.Unmarshal(bs, b)
+	err = encoding.Unmarshal(bs, b)
 	assert.NoError(t, err)
 
 	assert.Equal(t, eb, b)

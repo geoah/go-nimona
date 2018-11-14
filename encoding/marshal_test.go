@@ -66,10 +66,13 @@ func TestMarshalUnmarshal(t *testing.T) {
 		"dmVeFkauQRs79JaF4FvC4SGFQdTm8SrcH5UUtXSPcZuB5CU6ifTktWqa9", base58.Encode(bs))
 
 	m := &TestMessage{}
-	err = Unmarshal(bs, m)
+	err = UnmarshalInto(bs, m)
 	assert.NoError(t, err)
-
 	assert.Equal(t, em, m)
+
+	v, err := Unmarshal(bs)
+	assert.NoError(t, err)
+	assert.Equal(t, em, v)
 
 	xxx, _ := json.Marshal(m)
 	fmt.Println(string(xxx))
@@ -112,7 +115,7 @@ func TestMarshalUnmarshalToMap(t *testing.T) {
 	}
 
 	m := map[string]interface{}{}
-	err = Unmarshal(bs, &m)
+	err = UnmarshalInto(bs, &m)
 	assert.NoError(t, err)
 
 	assert.Equal(t, em, m)
