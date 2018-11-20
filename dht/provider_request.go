@@ -5,7 +5,6 @@ import (
 )
 
 // ProviderRequest payload
-//proteus:generate
 type ProviderRequest struct {
 	RequestID string            `json:"requestID,omitempty"`
 	Key       string            `json:"key"`

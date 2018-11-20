@@ -34,7 +34,6 @@ const (
 	RS512            = "RS512" // RSASSA-PKCS-v1.5 using SHA-512
 )
 
-//proteus:generate
 type Signature struct {
 	Key       *Key   `json:"key"`
 	Alg       string `json:"alg"`

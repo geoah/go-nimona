@@ -6,9 +6,7 @@ import (
 	"nimona.io/go/encoding"
 )
 
-//proteus:generate
 type Sha3 struct {
-	Type string   `json:"@ctx"`
 	Hash [32]byte `json:"hash"`
 }
 
@@ -23,7 +21,6 @@ func (h *Sha3) Base58() string {
 
 func NewSha3(b []byte) *Sha3 {
 	return &Sha3{
-		Type: "sha3.256",
 		Hash: sha3.Sum256(b),
 	}
 }

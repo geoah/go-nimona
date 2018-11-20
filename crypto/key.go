@@ -29,7 +29,6 @@ const (
 
 // Key defines the minimal interface for each of the
 // key types.
-//proteus:generate
 type Key struct {
 	Algorithm              string `json:"alg,omitempty"`
 	KeyID                  string `json:"kid,omitempty"`

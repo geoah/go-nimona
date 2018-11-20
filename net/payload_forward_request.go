@@ -5,7 +5,6 @@ import (
 )
 
 // ForwardRequest is the payload for proxied blocks
-//proteus:generate
 type ForwardRequest struct {
 	Recipient string            `json:"recipient"` // address
 	FwBlock   interface{}       `json:"recipient"`

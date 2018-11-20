@@ -5,7 +5,6 @@ import (
 	"nimona.io/go/peers"
 )
 
-//proteus:generate
 type PeerInfoResponse struct {
 	RequestID    string            `json:"requestID,omitempty"`
 	PeerInfo     *peers.PeerInfo   `json:"peerInfo,omitempty"`

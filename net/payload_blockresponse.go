@@ -5,7 +5,6 @@ import (
 )
 
 // BlockResponse -
-//proteus:generate
 type BlockResponse struct {
 	RequestID      string            `json:"requestID"`
 	RequestedBlock interface{}       `json:"requestedBlock"`

@@ -5,7 +5,6 @@ import (
 	"nimona.io/go/peers"
 )
 
-//proteus:generate
 type HandshakeSyn struct {
 	Nonce     string            `json:"nonce"`
 	PeerInfo  *peers.PeerInfo   `json:"peerInfo,omitempty"`

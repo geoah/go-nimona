@@ -7,7 +7,6 @@ type Collectable interface {
 }
 
 // ConnectionEvent for reporting connection info
-//proteus:generate
 type ConnectionEvent struct {
 	// Event attributes
 	Direction string `json:"direction"`
@@ -26,7 +25,6 @@ func (ce *ConnectionEvent) Measurements() map[string]interface{} {
 }
 
 // BlockEvent for reporting block metrics
-//proteus:generate
 type BlockEvent struct {
 	// Event attributes
 	Direction   string `json:"direction"`

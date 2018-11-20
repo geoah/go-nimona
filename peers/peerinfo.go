@@ -5,7 +5,6 @@ import (
 )
 
 // PeerInfo holds the information exchange needs to connect to a remote peer
-//proteus:generate
 type PeerInfo struct {
 	Addresses []string          `json:"addresses"`
 	Signature *crypto.Signature `json:"@sig"`

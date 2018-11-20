@@ -6,7 +6,6 @@ import (
 )
 
 // Policy for Block
-//proteus:generate
 type Policy struct {
 	Description string   `json:"description,omitempty"`
 	Subjects    []string `json:"subjects,omitempty"`

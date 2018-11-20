@@ -5,7 +5,6 @@ import (
 )
 
 // BlockRequest payload for BlockRequestType
-//proteus:generate
 type BlockRequest struct {
 	RequestID string            `json:"requestID"`
 	ID        string            `json:"id"`
