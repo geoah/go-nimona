@@ -6,6 +6,27 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
+// Decode is a wrapper for mapstructure's Decode with our decodeHook that allows
+// decoding a map to the given structs
+// TODO move addCtx to an option
+// TODO move adding original block (@_) to an option
+func Decode(from map[string]interface{}, to interface{}, addCtx bool) error {
+	dc := &mapstructure.DecoderConfig{
+		Metadata:         &mapstructure.Metadata{},
+		DecodeHook:       getDecodeHook(addCtx),
+		Result:           to,
+		TagName:          "json",
+		WeaklyTypedInput: true,
+	}
+	from[attrBlock] = from
+	dec, err := mapstructure.NewDecoder(dc)
+	if err != nil {
+		return err
+	}
+
+	return dec.Decode(from)
+}
+
 func getDecodeHook(addCtx bool) mapstructure.DecodeHookFuncType {
 	return func(from reflect.Type, to reflect.Type, data interface{}) (interface{}, error) {
 		// fmt.Println("------------")
@@ -36,7 +57,7 @@ func getDecodeHook(addCtx bool) mapstructure.DecodeHookFuncType {
 			}
 
 			delete(obj, attrCtx)
-			if err := Decode(data, v, true); err != nil {
+			if err := Decode(obj, v, true); err != nil {
 				return nil, err
 			}
 
@@ -45,22 +66,4 @@ func getDecodeHook(addCtx bool) mapstructure.DecodeHookFuncType {
 
 		return data, nil
 	}
-}
-
-// Decode is a wrapper for mapstructure's Decode with our decodeHook that allows
-// decoding maps to structs using the value of our @ctx attribute
-func Decode(from interface{}, to interface{}, addCtx bool) error {
-	dc := &mapstructure.DecoderConfig{
-		Metadata:         &mapstructure.Metadata{},
-		DecodeHook:       getDecodeHook(addCtx),
-		Result:           to,
-		TagName:          "json",
-		WeaklyTypedInput: true,
-	}
-	dec, err := mapstructure.NewDecoder(dc)
-	if err != nil {
-		return err
-	}
-
-	return dec.Decode(from)
 }

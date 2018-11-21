@@ -6,6 +6,25 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
+// Encode is a wrapper for mapstructure's Decode with our decodeHook that allows
+// encoding structs to maps
+// TODO move addCtx to an option
+func Encode(from interface{}, to *map[string]interface{}, addCtx bool) error {
+	dc := &mapstructure.DecoderConfig{
+		Metadata:         &mapstructure.Metadata{},
+		DecodeHook:       getEncodeHook(addCtx),
+		Result:           to,
+		TagName:          "json",
+		WeaklyTypedInput: true,
+	}
+	dec, err := mapstructure.NewDecoder(dc)
+	if err != nil {
+		return err
+	}
+
+	return dec.Decode(from)
+}
+
 func getEncodeHook(addCtx bool) mapstructure.DecodeHookFuncType {
 	return func(from reflect.Type, to reflect.Type, data interface{}) (interface{}, error) {
 		// fmt.Println("------------")
@@ -56,22 +75,4 @@ func getEncodeHook(addCtx bool) mapstructure.DecodeHookFuncType {
 
 		return data, nil
 	}
-}
-
-// Encode is a wrapper for mapstructure's Decode with our decodeHook that allows
-// encoding structs to maps
-func Encode(from interface{}, to interface{}, addCtx bool) error {
-	dc := &mapstructure.DecoderConfig{
-		Metadata:         &mapstructure.Metadata{},
-		DecodeHook:       getEncodeHook(addCtx),
-		Result:           to,
-		TagName:          "json",
-		WeaklyTypedInput: true,
-	}
-	dec, err := mapstructure.NewDecoder(dc)
-	if err != nil {
-		return err
-	}
-
-	return dec.Decode(from)
 }
