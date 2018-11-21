@@ -6,11 +6,24 @@ import (
 	"nimona.io/go/encoding"
 )
 
-type Sha3 struct {
-	Hash [32]byte `json:"hash"`
+// Hash is a block (container) for a hash
+type Hash struct {
+	Alg    string `json:"alg"`
+	Digest []byte `json:"dig"`
 }
 
-func (h *Sha3) Base58() string {
+// Bytes returns the marshaled block
+func (h *Hash) Bytes() []byte {
+	b, err := encoding.Marshal(h)
+	if err != nil {
+		panic(err)
+	}
+
+	return b
+}
+
+// Base58 returns the base58 representation of the marshaled block
+func (h *Hash) Base58() string {
 	b, err := encoding.Marshal(h)
 	if err != nil {
 		panic(err)
@@ -19,8 +32,11 @@ func (h *Sha3) Base58() string {
 	return base58.Encode(b)
 }
 
-func NewSha3(b []byte) *Sha3 {
-	return &Sha3{
-		Hash: sha3.Sum256(b),
+// NewSha3 creates a new block (container) for a sha3 hash given a payload
+func NewSha3(p []byte) *Hash {
+	d := sha3.Sum256(p)
+	return &Hash{
+		Alg:    "SHA3",
+		Digest: d[:],
 	}
 }

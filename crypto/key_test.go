@@ -22,7 +22,7 @@ func TestKeyEncoding(t *testing.T) {
 	bs, err := encoding.Marshal(ek)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "BvuiBQ7bekExgi62fxZ2ARcqoCPYY3P5xQjc2hwiFaSS", base58.Encode(bs))
+	assert.Equal(t, "Nx3cnuT6J8XPNCBmncEt5BfwfKtYtf6h5VzoQ", base58.Encode(bs))
 
 	m := map[string]interface{}{}
 	err = encoding.UnmarshalInto(bs, &m)

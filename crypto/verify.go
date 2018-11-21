@@ -13,18 +13,19 @@ var (
 	ErrCouldNotVerify = errors.New("could not verify signature")
 )
 
-func Verify(signature *Signature, digest []byte) error {
-	mKey := signature.Key.Materialize()
+// Verify signature given the signer's key and payload digest
+func Verify(sig *Signature, key *Key, digest []byte) error {
+	mKey := key.Materialize()
 	pKey, ok := mKey.(*ecdsa.PublicKey)
 	if !ok {
 		return errors.New("only ecdsa public keys are currently supported")
 	}
 
 	hash := sha256.Sum256(digest)
-	rBytes := new(big.Int).SetBytes(signature.Signature[0:32])
-	sBytes := new(big.Int).SetBytes(signature.Signature[32:64])
+	r := new(big.Int).SetBytes(sig.R)
+	s := new(big.Int).SetBytes(sig.S)
 
-	if ok := ecdsa.Verify(pKey, hash[:], rBytes, sBytes); !ok {
+	if ok := ecdsa.Verify(pKey, hash[:], r, s); !ok {
 		return ErrCouldNotVerify
 	}
 

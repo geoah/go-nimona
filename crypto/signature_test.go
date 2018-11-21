@@ -1,6 +1,8 @@
 package crypto
 
 import (
+	"math"
+	"math/big"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -8,52 +10,25 @@ import (
 	"nimona.io/go/encoding"
 )
 
-// func TestSignatureVerification(t *testing.T) {
-// 	sk, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-// 	assert.NoError(t, err)
-// 	assert.NotNil(t, sk)
-
-// 	k, err := NewKey(sk)
-// 	assert.NoError(t, err)
-// 	assert.NotNil(t, sk)
-
-// 	p := &Block{
-// 		Type: "test.nimona.io/dummy",
-// 		Payload: map[string]interface{}{
-// 			"foo": "bar2",
-// 		},
-// 	}
-
-// 	err = Sign(p, k)
-// 	assert.NoError(t, err)
-// 	assert.NotEmpty(t, p.Signature)
-
-// 	// test verification
-// 	digest, err := getDigest(p)
-// 	assert.NoError(t, err)
-// 	err = Verify(p.Signature, digest)
-// 	assert.NoError(t, err)
-// }
-
 func TestSignatureEncoding(t *testing.T) {
 	es := &Signature{
-		Key: &Key{
-			Algorithm: "key-alg",
-		},
 		Alg: "sig-alg",
+		R:   big.NewInt(math.MaxInt64).Bytes(),
+		S:   big.NewInt(math.MinInt64).Bytes(),
 	}
 
 	em := map[string]interface{}{
 		"@ctx": "/sig",
 		"alg":  "sig-alg",
-		"key":  es.Key,
+		"r":    es.R,
+		"s":    es.S,
 	}
 
 	bs, err := encoding.Marshal(es)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "BiB8mh2HL54SZ82m9tEsbMRGPC7QML6jkCc2G2YTfvkW2kBaC3D9XZNdw"+
-		"aqYPvTMrkGCxQGNrqJQytWng83bsDYLeb9xerPVYhdP", base58.Encode(bs))
+	assert.Equal(t, "41BGbraog8gf47JJunL1pYsE8eeE11v6uirNPoFNuKbJ7tUATDbuXpM2G"+
+		"ZqbbGfojVkcPzYfZ", base58.Encode(bs))
 
 	m := map[string]interface{}{}
 	err = encoding.UnmarshalInto(bs, &m)

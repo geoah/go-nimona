@@ -54,16 +54,17 @@ func TestMarshalUnmarshal(t *testing.T) {
 
 	em := &TestMessage{
 		Body:      "hello",
-		Timestamp: "2018-11-09T22:07:21Z",
+		Timestamp: "2018-11-09T22:07:21Z", // TODO support timestamp `:t`
 		Signature: es,
 	}
 
 	bs, err := Marshal(em)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "dyWcbruKbSa1h4ZWvBQQPuPoJmfXw4EqQePCqVXDJe264bmUyAhMg1wTS"+
-		"aFtMZsE9Zy24Hcn5NJyGpoouvAZWrkno5Wnud97mSDHn55zqg5oRxFt48qyAS3FzpGbjB"+
-		"dmVeFkauQRs79JaF4FvC4SGFQdTm8SrcH5UUtXSPcZuB5CU6ifTktWqa9", base58.Encode(bs))
+	assert.Equal(t, "5zrZoD7TStgnkh36YpWWitkFsUxmqfNHRp2UofB2vahpL8SAsAfEYvm4y"+
+		"VuwdN5z82DNj9yuzePDXWYZdam21vTrM5B8338Z14b6RmHd2Ppj9x5DTiwVuFZdRjkhqx"+
+		"tc4Hj4vEbydAcQhhWRnJ98V1jUpKHTt7Vf7Hjp7oFfsyEzMa65TeYTRKcUi3jumJqcVTs"+
+		"6wnoGTKRTxaEpossrHHEK4DP", base58.Encode(bs))
 
 	m := &TestMessage{}
 	err = UnmarshalInto(bs, m)

@@ -2,14 +2,6 @@
 
 
 [[projects]]
-  branch = "master"
-  digest = "1:f9243cde6f0b1e0d823de50eeb77f18681b3a649760073357fa951f51a55e947"
-  name = "github.com/britram/borat"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "f891bcfcfb9b69c58b8348ec13eadad5bf2a5a2d"
-
-[[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -63,12 +55,12 @@
   version = "v1.3.0"
 
 [[projects]]
-  digest = "1:b7fc4c3fd91df516486f53cc86f4b55a0c815782dbe852c5a19cce8e6c577aac"
+  digest = "1:64241365fa95f35567976f0790ecfa85c9cb3d4131cc6d6cc7adb1cc6437159f"
   name = "github.com/go-resty/resty"
   packages = ["."]
   pruneopts = "UT"
-  revision = "d4920dcf5b7689548a6db640278a9b35a5b48ec6"
-  version = "v1.9.1"
+  revision = "13ff84ebd5bdfa46a342d9edb869e21560a478f8"
+  version = "v1.10.2"
 
 [[projects]]
   digest = "1:9ae31ce33b4bab257668963e844d98765b44160be4ee98cafc44637a213e530d"
@@ -131,7 +123,7 @@
   version = "v1.0"
 
 [[projects]]
-  digest = "1:18f8bac7ae238f1d06b347d40fea2a37d029e11ddeac57163182a08c780955f2"
+  digest = "1:718c57979a9197414a044fff2028e57cb9fe145069e4f507059755bfe87f1bfe"
   name = "github.com/influxdata/influxdb"
   packages = [
     "client/v2",
@@ -139,8 +131,19 @@
     "pkg/escape",
   ]
   pruneopts = "UT"
-  revision = "389de31c961831de0a9f4172173337d4a6193909"
-  version = "v1.6.3"
+  revision = "cb03c542a4054f0f4d3dc13919d31c456bdb5c39"
+  version = "v1.7.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:2c584d8971881e9f9a7dd2e0a712e83cb5ded51c5173eef1615ce3f047dbded3"
+  name = "github.com/influxdata/platform"
+  packages = [
+    "models",
+    "pkg/escape",
+  ]
+  pruneopts = "UT"
+  revision = "096143977a507f67932cdff21aa797b6d372f9fb"
 
 [[projects]]
   branch = "master"
@@ -208,12 +211,12 @@
   version = "1.0.1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:b9b9f43a8a410d633e6547f89e830926741070941f2243d4d3a0bb154f565c9e"
+  digest = "1:cf5b7fbff2c87cff6c0e11f87b30edc21abc6592e6a76f41003ca6d5a712cf48"
   name = "github.com/mr-tron/base58"
   packages = ["base58"]
   pruneopts = "UT"
-  revision = "f84df45a6b88974a98d1473e9f0de0eac859a3d9"
+  revision = "89529c6904fcd077434931b4eac8b4b2f0991baf"
+  version = "v1.1.0"
 
 [[projects]]
   digest = "1:95741de3af260a92cc5c7f3f3061e85273f5a81b5db20d4bd68da74bd521675e"
@@ -275,12 +278,12 @@
   version = "v1.1.2"
 
 [[projects]]
-  digest = "1:516e71bed754268937f57d4ecb190e01958452336fa73dbac880894164e91c1f"
+  digest = "1:08d65904057412fc0270fc4812a1c90c594186819243160dc779a402d4b6d0bc"
   name = "github.com/spf13/cast"
   packages = ["."]
   pruneopts = "UT"
-  revision = "8965335b8c7107321228e3e3702cab9832751bac"
-  version = "v1.2.0"
+  revision = "8c9545af88b134710ab1cd196795e7f2388358d7"
+  version = "v1.3.0"
 
 [[projects]]
   digest = "1:645cabccbb4fa8aab25a956cbcbdf6a6845ca736b2c64e197ca7cbb9d210b939"
@@ -335,11 +338,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ba321cf9a010d56190c186289ef67280f7a86d3175d66ac4502a104e1f458f2b"
+  digest = "1:1ff6f834ffc467711d8b7520126c079438984c84f2a292106a870fce48f6d00c"
   name = "github.com/ugorji/go"
   packages = ["codec"]
   pruneopts = "UT"
-  revision = "e253f1f20942cb6dc505e504e8bbba4b7f434cb2"
+  revision = "f8fe4a359c185b03b17daf37779b0729bbf02ac0"
 
 [[projects]]
   digest = "1:3c1a69cdae3501bf75e76d0d86dc6f2b0a7421bc205c0cb7b96b19eed464a34d"
@@ -374,30 +377,30 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e7a1ce56dc2fd57e2e1fe88c984583e8345d24a27068a47b134a2f2fd0e095a2"
+  digest = "1:07bed7db52308c8338e0848cde9b26ec6fdab68c6c79ab1098dc728b6a899e45"
   name = "golang.org/x/crypto"
   packages = ["sha3"]
   pruneopts = "UT"
-  revision = "0e37d006457bf46f9e6692014ba72ef82c33022c"
+  revision = "3d3f9f413869b949e48070b5bc593aa22cc2b8f2"
 
 [[projects]]
   branch = "master"
-  digest = "1:a412caf33b5d3c7938c28e1e745c10664bd180277b73ab3b34c0c467886f9969"
+  digest = "1:e56a91f64003cb1bf7fed334ba2615d9750991d4570d5254a7cdbeac3374d546"
   name = "golang.org/x/net"
   packages = [
     "idna",
     "publicsuffix",
   ]
   pruneopts = "UT"
-  revision = "49bb7cea24b1df9410e1712aa6433dae904ff66a"
+  revision = "adae6a3d119ae4890b46832a2e88a95adc62b8e7"
 
 [[projects]]
   branch = "master"
-  digest = "1:6eb2645d74b43d9c87b51947df39f7c668a4f422cd512053f7f6f75bfaad0197"
+  digest = "1:225564f71149334315118db714e1ea87513e4a11cf4acb27e26bc7577cebfa0b"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "d0be0721c37eeb5299f245a996a483160fc36940"
+  revision = "0cf1ed9e522b7dbb416f080a5c8003de9b702bf4"
 
 [[projects]]
   digest = "1:a2ab62866c75542dd18d2b069fec854577a20211d7c0ea6ae746072a1dccdd18"
@@ -421,14 +424,6 @@
   pruneopts = "UT"
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
-
-[[projects]]
-  digest = "1:653e04c4515b37169ef5874d752f4254e63b4aedb5c8b3a4118e9e3a4e3503e1"
-  name = "gopkg.in/d4l3k/messagediff.v1"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "29f32d820d112dbd66e58492a6ffb7cc3106312b"
-  version = "v1.2.1"
 
 [[projects]]
   digest = "1:cbc72c4c4886a918d6ab4b95e347ffe259846260f99ebdd8a198c2331cf2b2e9"
@@ -482,7 +477,6 @@
     "go.uber.org/zap",
     "go.uber.org/zap/zapcore",
     "golang.org/x/crypto/sha3",
-    "gopkg.in/d4l3k/messagediff.v1",
     "gopkg.in/inconshreveable/go-keen.v0",
   ]
   solver-name = "gps-cdcl"

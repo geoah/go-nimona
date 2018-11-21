@@ -8,14 +8,16 @@ import (
 )
 
 var (
-	ErrMissingType = errors.New("missing type")
+	// ErrUnknownType for when we are trying to marshal an unregistered type
+	ErrUnknownType = errors.New("unknown type")
 )
 
+// Marshal encodes a given struct to a block (container), and encodes it as cbor
 func Marshal(v interface{}) ([]byte, error) {
 	rt := GetType(reflect.TypeOf(v))
 	mt, ok := v.(map[string]interface{})
 	if rt == "" && ok && mt[attrCtx] != nil && mt[attrCtx].(string) == "" {
-		return nil, ErrMissingType
+		return nil, ErrUnknownType
 	}
 
 	m := map[string]interface{}{}
@@ -23,9 +25,14 @@ func Marshal(v interface{}) ([]byte, error) {
 		return nil, err
 	}
 
+	tm, err := TypeMap(m)
+	if err != nil {
+		return nil, err
+	}
+
 	b := []byte{}
 	enc := codec.NewEncoderBytes(&b, CborHandler())
-	if err := enc.Encode(m); err != nil {
+	if err := enc.Encode(tm); err != nil {
 		return nil, err
 	}
 
