@@ -17,25 +17,19 @@ func TestSignatureEncoding(t *testing.T) {
 		S:   big.NewInt(math.MinInt64).Bytes(),
 	}
 
-	em := map[string]interface{}{
-		"@ctx": "/sig",
-		"alg":  "sig-alg",
-		"r":    es.R,
-		"s":    es.S,
-	}
-
-	bs, err := encoding.Marshal(es)
+	eo, err := encoding.NewObjectFromStruct(es)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "41BGbraog8gf47JJunL1pYsE8eeE11v6uirNPoFNuKbJ7tUATDbuXpM2G"+
-		"ZqbbGfojVkcPzYfZ", base58.Encode(bs))
+	bs, err := encoding.Marshal(eo)
+	assert.NoError(t, err)
 
-	m := map[string]interface{}{}
-	err = encoding.UnmarshalInto(bs, &m)
+	assert.Equal(t, "41BGbraog8gf47JJunL1pYsE8eeE11v6uirNPoFNuKJXP92EZudmWzi19"+
+		"mdGmoTnyMxwCWvSj", base58.Encode(bs))
 
-	assert.Equal(t, em, m)
+	o, err := encoding.Unmarshal(bs)
+	assert.NoError(t, err)
+	assert.Equal(t, eo, o)
 
-	s := &Signature{}
-	err = encoding.UnmarshalInto(bs, s)
+	s, err := o.Materialize()
 	assert.Equal(t, es, s)
 }

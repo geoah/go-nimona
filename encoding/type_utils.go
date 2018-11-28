@@ -15,6 +15,11 @@ func getPrimaryType(k string) string {
 	return ps[1][:1]
 }
 
+func getCleanKeyName(k string) string {
+	ps := strings.Split(k, ":")
+	return ps[0]
+}
+
 func getFullType(k string) string {
 	ps := strings.Split(k, ":")
 	if len(ps) == 1 {

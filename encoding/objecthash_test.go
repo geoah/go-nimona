@@ -8,22 +8,39 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestHash(t *testing.T) {
+func TestObjectHash(t *testing.T) {
 	v := map[string]interface{}{
 		"str": "foo",
 	}
 
-	kh := hash(hintString, []byte("str"))
-	vh := hash(hintString, []byte("foo"))
+	kh := hash(HintString, []byte("str:s"))
+	vh := hash(HintString, []byte("foo"))
 	ob := append(kh, vh...)
-	oh := hash(hintMap, ob)
+	oh := hash(HintMap, ob)
 
-	h, err := HashMap(v)
+	o := NewObject(v)
+	h, err := ObjectHash(o)
 	assert.NoError(t, err)
 	assert.Equal(t, oh, h)
 }
 
-func TestLongHash(t *testing.T) {
+func TestObjectHashDocs(t *testing.T) {
+	v := map[string]interface{}{
+		"some-string:s": "bar",
+		"nested-object:o": map[string]interface{}{
+			"unsigned-number-one:u": 1,
+			"array-of-ints:a<i>":    []int{-1, 0, 1},
+		},
+	}
+
+	o := NewObject(v)
+	h, err := ObjectHash(o)
+	assert.NoError(t, err)
+
+	fmt.Printf("%x", h)
+}
+
+func TestLongObjectHash(t *testing.T) {
 	v := map[string]interface{}{
 		"i":    int(math.MaxInt32),
 		"i8":   int8(math.MaxInt8),
@@ -59,7 +76,8 @@ func TestLongHash(t *testing.T) {
 		"bool": true,
 	}
 
-	h, err := HashMap(v)
+	o := NewObject(v)
+	h, err := ObjectHash(o)
 	assert.NoError(t, err)
 
 	fmt.Printf("% x", h)

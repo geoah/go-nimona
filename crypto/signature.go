@@ -3,8 +3,9 @@ package crypto
 import (
 	"crypto/ecdsa"
 	"crypto/rand"
-	"crypto/sha256"
 	"errors"
+
+	"nimona.io/go/encoding"
 )
 
 var (
@@ -16,6 +17,13 @@ var (
 	ErrAlgorithNotImplemented = errors.New("algorithm not implemented")
 )
 
+const (
+	// AlgorithmES256 for creating ES256 based signatures
+	AlgorithmES256 = "ES256"
+	// AlgorithmObjectHash for creating ObjectHash+ES256 based signatures
+	AlgorithmObjectHash = "OH_ES256"
+)
+
 // Signature block (container), currently supports only ES256
 type Signature struct {
 	Alg string `json:"alg"`
@@ -24,7 +32,7 @@ type Signature struct {
 }
 
 // NewSignature returns a signature given some bytes and a private key
-func NewSignature(key *Key, alg string, digest []byte) (*Signature, error) {
+func NewSignature(key *Key, alg string, o *encoding.Object) (*Signature, error) {
 	if key == nil {
 		return nil, errors.New("missing key")
 	}
@@ -39,12 +47,47 @@ func NewSignature(key *Key, alg string, digest []byte) (*Signature, error) {
 		return nil, errors.New("only ecdsa private keys are currently supported")
 	}
 
-	if alg != "ES256" {
+	var (
+		hash []byte
+		err  error
+	)
+
+	switch alg {
+	// case AlgorithmES256:
+	// 	o, err := encoding.NewObjectFromStruct(v)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+
+	// 	b, err := encoding.Marshal(o)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+
+	// 	m := map[string]interface{}{}
+	// 	if err := encoding.UnmarshalSimple(b, &m); err != nil {
+	// 		return nil, err
+	// 	}
+
+	// 	// TODO replace ES256 with OH that should deal with removing the @sig
+	// 	delete(m, "@sig")
+
+	// 	b, err = encoding.Marshal(m)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+
+	// 	h := sha256.Sum256(b)
+	// 	hash = h[:]
+	case AlgorithmObjectHash:
+		hash, err = encoding.ObjectHash(o)
+		if err != nil {
+			return nil, err
+		}
+	default:
 		return nil, ErrAlgorithNotImplemented
 	}
 
-	// TODO implement more algorithms
-	hash := sha256.Sum256(digest)
 	r, s, err := ecdsa.Sign(rand.Reader, pKey, hash[:])
 	if err != nil {
 		return nil, err

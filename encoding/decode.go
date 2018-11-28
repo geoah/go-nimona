@@ -6,6 +6,10 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
+var (
+	objectType = reflect.TypeOf(&Object{})
+)
+
 // Decode is a wrapper for mapstructure's Decode with our decodeHook that allows
 // decoding a map to the given structs
 // TODO move addCtx to an option
@@ -18,13 +22,16 @@ func Decode(from map[string]interface{}, to interface{}, addCtx bool) error {
 		TagName:          "json",
 		WeaklyTypedInput: true,
 	}
-	from[attrBlock] = from
 	dec, err := mapstructure.NewDecoder(dc)
 	if err != nil {
 		return err
 	}
 
-	return dec.Decode(from)
+	if err := dec.Decode(from); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func getDecodeHook(addCtx bool) mapstructure.DecodeHookFuncType {
@@ -40,15 +47,26 @@ func getDecodeHook(addCtx bool) mapstructure.DecodeHookFuncType {
 			return data, nil
 		}
 
+		if to == objectType &&
+			from == objectType &&
+			reflect.TypeOf(data) == objectType {
+			return data.(*Object).Map(), nil
+		}
+
 		// decoding map to struct
-		if obj, ok := data.(map[string]interface{}); ok {
+		if m, ok := data.(map[string]interface{}); ok {
 			if to.Kind() == reflect.Map {
 				return data, nil
 			}
 
-			t, ok := obj[attrCtx].(string)
+			t, ok := m[attrCtx].(string)
 			if !ok {
 				return data, nil
+			}
+
+			if to == reflect.TypeOf(&Object{}) {
+				o := NewObject(m)
+				return o, nil
 			}
 
 			v := GetInstance(t)
@@ -56,8 +74,8 @@ func getDecodeHook(addCtx bool) mapstructure.DecodeHookFuncType {
 				return data, nil
 			}
 
-			delete(obj, attrCtx)
-			if err := Decode(obj, v, true); err != nil {
+			delete(m, attrCtx)
+			if err := Decode(m, v, true); err != nil {
 				return nil, err
 			}
 

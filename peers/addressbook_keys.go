@@ -29,11 +29,12 @@ func (ab *AddressBook) loadConfig(configPath string) error {
 		if err != nil {
 			return err
 		}
-		key := &crypto.Key{}
-		if err := encoding.UnmarshalInto(keyBytes, key); err != nil {
+		o, err := encoding.Unmarshal(keyBytes)
+		if err != nil {
 			return err
 		}
-		ab.localKey = key
+		key, err := o.Materialize()
+		ab.localKey = key.(*crypto.Key)
 		return nil
 	}
 
@@ -52,7 +53,12 @@ func (ab *AddressBook) loadConfig(configPath string) error {
 
 	ab.localKey = localKey
 
-	keyBytes, err := encoding.Marshal(localKey)
+	o, err := encoding.NewObjectFromStruct(localKey)
+	if err != nil {
+		return err
+	}
+
+	keyBytes, err := encoding.Marshal(o)
 	if err != nil {
 		return err
 	}

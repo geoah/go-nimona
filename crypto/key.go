@@ -6,8 +6,6 @@ import (
 	"math/big"
 
 	"github.com/pkg/errors"
-	"nimona.io/go/base58"
-	"nimona.io/go/encoding"
 )
 
 // Supported values for KeyType
@@ -46,10 +44,10 @@ type Key struct {
 	key                    interface{}
 }
 
-func (k *Key) Thumbprint() string {
-	b, _ := encoding.Marshal(k)
-	return base58.Encode(b)
-}
+// func (k *Key) Thumbprint() string {
+// 	b, _ := encoding.Marshal(k)
+// 	return base58.Encode(b)
+// }
 
 // GetPublicKey returns the public key
 func (k *Key) GetPublicKey() *Key {

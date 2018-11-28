@@ -1,13 +1,13 @@
 package peers
 
 import (
-	"fmt"
 	"strings"
 	"sync"
 
 	"go.uber.org/zap"
 
 	"nimona.io/go/crypto"
+	"nimona.io/go/encoding"
 	"nimona.io/go/log"
 )
 
@@ -74,12 +74,12 @@ func (ab *AddressBook) PutPeerInfo(peerInfo *PeerInfo) error {
 	}
 
 	peerThumbprint := peerInfo.Thumbprint()
-	exPeer, err := ab.GetPeerInfo(peerThumbprint)
-	if err == nil && exPeer != nil {
-		if fmt.Sprintf("%x", exPeer.Signature) == fmt.Sprintf("%x", peerInfo.Signature) {
-			return nil
-		}
-	}
+	// exPeer, err := ab.GetPeerInfo(peerThumbprint)
+	// if err == nil && exPeer != nil {
+	// 	if fmt.Sprintf("%x", exPeer.Signature) == fmt.Sprintf("%x", peerInfo.Signature) {
+	// 		return nil
+	// 	}
+	// }
 
 	ab.PutPeerStatus(peerThumbprint, StatusNew)
 	return ab.peers.Put(peerInfo)
@@ -94,12 +94,22 @@ func (ab *AddressBook) GetLocalPeerInfo() *PeerInfo {
 		Addresses: addresses,
 	}
 
-	sig, err := crypto.Sign(pi, ab.GetLocalPeerKey())
+	o, err := encoding.NewObjectFromStruct(pi)
+	if err != nil {
+		return nil
+	}
+
+	sig, err := crypto.Sign(o, ab.GetLocalPeerKey())
 	if err != nil {
 		panic(err)
 	}
 
-	pi.Signature = sig
+	osig, err := encoding.NewObjectFromStruct(sig)
+	if err != nil {
+		panic(err)
+	}
+
+	o.SetRaw("@sig", osig)
 	return pi
 }
 
@@ -215,9 +225,13 @@ func (ab *AddressBook) SetAlias(k *crypto.Key, v string) {
 }
 
 func (ab *AddressBook) GetAlias(k *crypto.Key) string {
+	o, err := encoding.NewObjectFromStruct(k)
+	if err != nil {
+		panic(err)
+	}
 	v, ok := ab.aliases.Load(k)
 	if !ok {
-		return k.Thumbprint()
+		return o.HashBase58()
 	}
 	return v.(string)
 }

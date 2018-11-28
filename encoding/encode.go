@@ -9,20 +9,32 @@ import (
 // Encode is a wrapper for mapstructure's Decode with our decodeHook that allows
 // encoding structs to maps
 // TODO move addCtx to an option
-func Encode(from interface{}, to *map[string]interface{}, addCtx bool) error {
+func Encode(from interface{}, addCtx bool) (map[string]interface{}, error) {
+	m := map[string]interface{}{}
 	dc := &mapstructure.DecoderConfig{
 		Metadata:         &mapstructure.Metadata{},
 		DecodeHook:       getEncodeHook(addCtx),
-		Result:           to,
+		Result:           &m,
 		TagName:          "json",
 		WeaklyTypedInput: true,
 	}
 	dec, err := mapstructure.NewDecoder(dc)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return dec.Decode(from)
+	if err := dec.Decode(from); err != nil {
+		return nil, err
+	}
+
+	// spew.Dump(m)
+
+	// tm, err := TypeMap(m)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	return m, nil
 }
 
 func getEncodeHook(addCtx bool) mapstructure.DecodeHookFuncType {
@@ -40,33 +52,29 @@ func getEncodeHook(addCtx bool) mapstructure.DecodeHookFuncType {
 
 		// decoding registered struct -- forced to map
 		// TODO(geoah) WTF This is insanely hacky -- isn't it?
-		if GetType(from) != "" {
-			// same as "decoding struct to map"
-			if t := GetType(from); t != "" {
-				m := map[string]interface{}{}
-				if err := Encode(data, &m, false); err != nil {
-					return nil, err
-				}
-				m[attrCtx] = t
-				for k, v := range m {
-					if vt := GetType(reflect.TypeOf(v)); vt != "" {
-						vm := map[string]interface{}{}
-						if err := Encode(v, &vm, true); err != nil {
-							return nil, err
-						}
-						vm[attrCtx] = vt
-						m[k] = vm
-					}
-				}
-				return m, nil
+		if t := GetType(from); t != "" {
+			m, err := Encode(data, false)
+			if err != nil {
+				return nil, err
 			}
-			return data, nil
+			m[attrCtx] = t
+			for k, v := range m {
+				if vt := GetType(reflect.TypeOf(v)); vt != "" {
+					vm, err := Encode(v, true)
+					if err != nil {
+						return nil, err
+					}
+					vm[attrCtx] = vt
+					m[k] = vm
+				}
+			}
+			return m, nil
 		}
 
 		// decoding unknown struct to map
 		if to.Kind() == reflect.Map {
-			m := map[string]interface{}{}
-			if err := Encode(data, &m, false); err != nil {
+			m, err := Encode(data, false)
+			if err != nil {
 				return nil, err
 			}
 			// fmt.Println("m", reflect.TypeOf(m), m)

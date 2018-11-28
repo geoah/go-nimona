@@ -2,25 +2,14 @@ package crypto
 
 import "nimona.io/go/encoding"
 
-// Sign block (container) with given key and return a signature block (container)
-func Sign(v interface{}, key *Key) (*Signature, error) {
-	b, err := encoding.Marshal(v)
+// Sign any block (container) with given key and return a signature block (container)
+func Sign(o *encoding.Object, key *Key) (*encoding.Object, error) {
+	sig, err := NewSignature(key, AlgorithmObjectHash, o)
 	if err != nil {
 		return nil, err
 	}
 
-	m := map[string]interface{}{}
-	if err := encoding.UnmarshalSimple(b, &m); err != nil {
-		return nil, err
-	}
+	o.SetRaw("@sig", sig)
 
-	// TODO replace ES256 with OH that should deal with removing the @sig
-	delete(m, "@sig")
-
-	b, err = encoding.Marshal(m)
-	if err != nil {
-		return nil, err
-	}
-
-	return NewSignature(key, "ES256", b)
+	return o, nil
 }

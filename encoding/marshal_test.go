@@ -1,8 +1,6 @@
 package encoding
 
 import (
-	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -58,7 +56,10 @@ func TestMarshalUnmarshal(t *testing.T) {
 		Signature: es,
 	}
 
-	bs, err := Marshal(em)
+	eo, err := NewObjectFromStruct(em)
+	assert.NoError(t, err)
+
+	bs, err := Marshal(eo)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "5zrZoD7TStgnkh36YpWWitkFsUxmqfNHRp2UofB2vahpL8SAsAfEYvm4y"+
@@ -66,61 +67,7 @@ func TestMarshalUnmarshal(t *testing.T) {
 		"tc4Hj4vEbydAcQhhWRnJ98V1jUpKHTt7Vf7Hjp7oFfsyEzMa65TeYTRKcUi3jumJqcVTs"+
 		"6wnoGTKRTxaEpossrHHEK4DP", base58.Encode(bs))
 
-	m := &TestMessage{}
-	err = UnmarshalInto(bs, m)
+	o, err := Unmarshal(bs)
 	assert.NoError(t, err)
-	assert.Equal(t, em, m)
-
-	v, err := Unmarshal(bs)
-	assert.NoError(t, err)
-	assert.Equal(t, em, v)
-
-	xxx, _ := json.Marshal(m)
-	fmt.Println(string(xxx))
-}
-
-func TestMarshalUnmarshalToMap(t *testing.T) {
-	Register(testTypeKey, &TestKey{})
-	Register(testTypeSignature, &TestSignature{})
-	Register(testTypeMessage, &TestMessage{})
-
-	ek := &TestKey{
-		Algorithm: "a",
-		X:         []byte{1, 2, 3},
-		Y:         []byte{4, 5, 6},
-		D:         []byte{7, 8, 9},
-	}
-
-	es := struct {
-		Type      string   `json:"@ctx"`
-		Key       *TestKey `json:"key"`
-		Alg       string   `json:"alg"`
-		Signature []byte   `json:"sig"`
-	}{
-		Type:      "type:other",
-		Key:       ek,
-		Alg:       "b",
-		Signature: []byte{10, 11, 12},
-	}
-
-	bs, err := Marshal(es)
-	assert.NoError(t, err)
-
-	fmt.Println(base58.Encode(bs))
-
-	em := map[string]interface{}{
-		"@ctx": "type:other",
-		"sig":  []byte{10, 11, 12},
-		"alg":  "b",
-		"key":  ek,
-	}
-
-	m := map[string]interface{}{}
-	err = UnmarshalInto(bs, &m)
-	assert.NoError(t, err)
-
-	assert.Equal(t, em, m)
-
-	xxx, _ := json.MarshalIndent(m, "", "")
-	fmt.Println(string(xxx))
+	assert.NotNil(t, o)
 }

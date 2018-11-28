@@ -14,23 +14,19 @@ func TestKeyEncoding(t *testing.T) {
 		Algorithm: "key-alg",
 	}
 
-	em := map[string]interface{}{
-		"@ctx": "/key",
-		"alg":  "key-alg",
-	}
+	eo, err := encoding.NewObjectFromStruct(ek)
+	assert.NoError(t, err)
 
-	bs, err := encoding.Marshal(ek)
+	bs, err := encoding.Marshal(eo)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "Nx3cnuT6J8XPNCBmncEt5BfwfKtYtf6h5VzoQ", base58.Encode(bs))
 
-	m := map[string]interface{}{}
-	err = encoding.UnmarshalInto(bs, &m)
+	o, err := encoding.Unmarshal(bs)
+	assert.NoError(t, err)
+	assert.Equal(t, eo, o)
 
-	assert.Equal(t, em, m)
-
-	k := &Key{}
-	err = encoding.UnmarshalInto(bs, k)
-
+	k, err := o.Materialize()
+	assert.NoError(t, err)
 	assert.Equal(t, ek, k)
 }
