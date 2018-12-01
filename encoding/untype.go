@@ -11,7 +11,7 @@ func UntypeMap(m map[string]interface{}) (map[string]interface{}, error) {
 	out := map[string]interface{}{}
 	for k, v := range m {
 		t := reflect.TypeOf(v)
-		h := getTypeHint(v)
+		h := GetHintFromType(v)
 		if h == "" {
 			panic(fmt.Sprintf("untype: unsupported type k=%s t=%s v=%#v", k, t.String(), v))
 		}

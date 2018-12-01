@@ -1,10 +1,15 @@
 package telemetry
 
+import "nimona.io/go/encoding"
+
 // Collectable for metric events
 type Collectable interface {
 	Collection() string
 	Measurements() map[string]interface{}
+	ToObject() *encoding.Object
 }
+
+//go:generate go run nimona.io/go/cmd/objectify -schema nimona.io/telemetry/connection -type ConnectionEvent -out event_connection_generated.go
 
 // ConnectionEvent for reporting connection info
 type ConnectionEvent struct {
@@ -23,6 +28,8 @@ func (ce *ConnectionEvent) Measurements() map[string]interface{} {
 		"direction": ce.Direction,
 	}
 }
+
+//go:generate go run nimona.io/go/cmd/objectify -schema nimona.io/telemetry/block -type BlockEvent -out event_block_generated.go
 
 // BlockEvent for reporting block metrics
 type BlockEvent struct {

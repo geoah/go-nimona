@@ -6,9 +6,8 @@ import (
 
 // Marshal encodes an object to cbor
 func Marshal(o *Object) ([]byte, error) {
-	m := o.Map()
 	b := []byte{}
 	enc := codec.NewEncoderBytes(&b, CborHandler())
-	err := enc.Encode(m)
+	err := enc.Encode(o)
 	return b, err
 }

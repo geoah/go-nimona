@@ -1,8 +1,6 @@
 package api
 
 import (
-	"fmt"
-
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
@@ -67,12 +65,8 @@ func (api *API) Serve(address string) error {
 	return api.router.Run(address)
 }
 
-func (api *API) mapBlock(v interface{}) map[string]interface{} {
-	b, _ := encoding.Marshal(v)
-	m := map[string]interface{}{}
-	encoding.UnmarshalInto(b, &m)
-	fmt.Println(">>>", m)
-	return m
+func (api *API) mapBlock(o *encoding.Object) map[string]interface{} {
+	return o.Map()
 
 	// 	"type":        v.Type,
 	// 	"payload":     v.Payload,

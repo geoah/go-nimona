@@ -2,9 +2,6 @@ package dht
 
 import (
 	"sync"
-
-	"nimona.io/go/crypto"
-	"nimona.io/go/encoding"
 )
 
 type Store struct {
@@ -25,9 +22,8 @@ func newStore() (*Store, error) {
 
 func (s *Store) PutProvider(provider *Provider) error {
 	// TODO verify payload type
-	b, _ := encoding.Marshal(provider)
-	h := crypto.NewSha3(b).Base58()
-	s.providers.Store(h, provider)
+	o := provider.ToObject()
+	s.providers.Store(o.HashBase58(), o)
 	return nil
 }
 

@@ -7,11 +7,12 @@ import (
 	"os"
 
 	"nimona.io/go/crypto"
+	"nimona.io/go/encoding"
 )
 
 type Exchanger interface {
-	Send(ctx context.Context, o interface{}, address string) error
-	Handle(contentType string, h func(o interface{}) error) (func(), error)
+	Send(ctx context.Context, o *encoding.Object, address string) error
+	Handle(contentType string, h func(o *encoding.Object) error) (func(), error)
 }
 
 const connectionEventType = "nimona.io/telemetry.connection"
@@ -73,18 +74,17 @@ func SendEvent(ctx context.Context, event Collectable) error {
 	return DefaultClient.SendEvent(ctx, event)
 }
 
-func (t *metrics) SendEvent(ctx context.Context,
-	event Collectable) error {
-	return t.exchange.Send(ctx, event, t.statsAddress)
+func (t *metrics) SendEvent(ctx context.Context, event Collectable) error {
+	return t.exchange.Send(ctx, event.ToObject(), t.statsAddress)
 }
 
-func (t *metrics) handleBlock(block interface{}) error {
-	switch v := block.(type) {
-	case *ConnectionEvent:
-		t.colletor.Collect(v)
-	case *BlockEvent:
-		t.colletor.Collect(v)
-	}
+func (t *metrics) handleBlock(o *encoding.Object) error {
+	// switch o.GetType() {
+	// case *ConnectionEvent:
+	// 	t.colletor.Collect(v)
+	// case *BlockEvent:
+	// 	t.colletor.Collect(v)
+	// }
 
 	return nil
 }

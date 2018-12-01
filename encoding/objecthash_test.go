@@ -18,7 +18,7 @@ func TestObjectHash(t *testing.T) {
 	ob := append(kh, vh...)
 	oh := hash(HintMap, ob)
 
-	o := NewObject(v)
+	o := NewObjectFromMap(v)
 	h, err := ObjectHash(o)
 	assert.NoError(t, err)
 	assert.Equal(t, oh, h)
@@ -33,7 +33,7 @@ func TestObjectHashDocs(t *testing.T) {
 		},
 	}
 
-	o := NewObject(v)
+	o := NewObjectFromMap(v)
 	h, err := ObjectHash(o)
 	assert.NoError(t, err)
 
@@ -76,7 +76,7 @@ func TestLongObjectHash(t *testing.T) {
 		"bool": true,
 	}
 
-	o := NewObject(v)
+	o := NewObjectFromMap(v)
 	h, err := ObjectHash(o)
 	assert.NoError(t, err)
 

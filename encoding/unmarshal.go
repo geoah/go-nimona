@@ -6,11 +6,11 @@ import (
 
 // Unmarshal a cbor encoded block (container) into a registered type, or map
 func Unmarshal(b []byte) (*Object, error) {
-	m := map[string]interface{}{}
+	o := NewObject()
 	dec := codec.NewDecoderBytes(b, CborHandler())
-	if err := dec.Decode(m); err != nil {
+	if err := dec.Decode(o); err != nil {
 		return nil, err
 	}
 
-	return NewObject(m), nil
+	return o, nil
 }

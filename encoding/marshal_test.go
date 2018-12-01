@@ -7,36 +7,38 @@ import (
 	"nimona.io/go/base58"
 )
 
-const (
-	testTypeKey       = "type:key"
-	testTypeSignature = "type:sig"
-	testTypeMessage   = "type:msg"
-)
-
 type TestKey struct {
-	Algorithm string `json:"alg,omitempty"`
-	X         []byte `json:"x,omitempty"`
-	Y         []byte `json:"y,omitempty"`
-	D         []byte `json:"d,omitempty"`
+	Algorithm string `json:"alg:s,omitempty"`
+	X         []byte `json:"x:d,omitempty"`
+	Y         []byte `json:"y:d,omitempty"`
+	D         []byte `json:"d:d,omitempty"`
+}
+
+func (t *TestKey) Type() string {
+	return "type:key"
 }
 
 type TestSignature struct {
-	Key       *TestKey `json:"key"`
-	Alg       string   `json:"alg"`
-	Signature []byte   `json:"sig"`
+	Key       *TestKey `json:"key:O"`
+	Alg       string   `json:"alg:s"`
+	Signature []byte   `json:"sig:d"`
+}
+
+func (t *TestSignature) Type() string {
+	return "type:sig"
 }
 
 type TestMessage struct {
-	Body      string         `json:"body"`
-	Timestamp string         `json:"timestamp"`
-	Signature *TestSignature `json:"@sig"`
+	Body      string         `json:"body:s"`
+	Timestamp string         `json:"timestamp:s"`
+	Signature *TestSignature `json:"@sig:O"`
+}
+
+func (t *TestMessage) Type() string {
+	return "type:msg"
 }
 
 func TestMarshalUnmarshal(t *testing.T) {
-	Register(testTypeKey, &TestKey{})
-	Register(testTypeSignature, &TestSignature{})
-	Register(testTypeMessage, &TestMessage{})
-
 	ek := &TestKey{
 		Algorithm: "a",
 		X:         []byte{1, 2, 3},

@@ -13,7 +13,7 @@ func TypeMap(m map[string]interface{}) (map[string]interface{}, error) {
 	out := map[string]interface{}{}
 	for k, v := range m {
 		t := reflect.TypeOf(v)
-		h := getTypeHint(v)
+		h := GetHintFromType(v)
 		if h == "" {
 			panic(fmt.Sprintf("type: unsupported type k=%s t=%s v=%#v", k, t.String(), v))
 		}
@@ -48,7 +48,7 @@ func TypeMap(m map[string]interface{}) (map[string]interface{}, error) {
 	return out, nil
 }
 
-func getTypeHint(o interface{}) string {
+func GetHintFromType(o interface{}) string {
 	// v := reflect.ValueOf(o)
 	t := reflect.TypeOf(o)
 	// if o == nil {
@@ -77,7 +77,7 @@ func getTypeHint(o interface{}) string {
 		}
 		if sv != nil {
 			// fmt.Println("ppppp", sv)
-			subType := getTypeHint(sv)
+			subType := GetHintFromType(sv)
 			return HintArray + "<" + subType + ">"
 		}
 		return HintArray + "<?>" // TODO(geoah) should this return "" or panic maybe?

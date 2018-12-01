@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"nimona.io/go/crypto"
+	"nimona.io/go/encoding"
 	"nimona.io/go/log"
 	"nimona.io/go/net"
 	"nimona.io/go/peers"
@@ -23,6 +24,14 @@ const (
 	exchangeExtention    = "dht"
 	closestPeersToReturn = 8
 	maxQueryTime         = 2 * time.Second
+)
+
+var (
+	typePeerInfoRequest  = PeerInfoRequest{}.GetType()
+	typePeerInfoResponse = PeerInfoResponse{}.GetType()
+	typeProviderRequest  = ProviderRequest{}.GetType()
+	typeProviderResponse = ProviderResponse{}.GetType()
+	typePeerInfo         = peers.PeerInfo{}.GetType()
 )
 
 // DHT is the struct that implements the dht protocol
@@ -56,15 +65,14 @@ func NewDHT(exchange net.Exchange, pm *peers.AddressBook, addresses []string) (*
 		ctx := context.Background()
 		req := &PeerInfoRequest{
 			RequestID: net.RandStringBytesMaskImprSrc(8),
-			PeerID:    lk.Thumbprint(),
+			PeerID:    lk.RawObject.HashBase58(),
 		}
-		sig, err := crypto.Sign(req, lk)
+		signedReq, err := crypto.Sign(req.ToObject(), lk)
 		if err != nil {
 			// TODO log error
 			continue
 		}
-		req.Signature = sig
-		if err := exchange.Send(ctx, req, addr); err != nil {
+		if err := exchange.Send(ctx, signedReq, addr); err != nil {
 			log.Logger(ctx).Warn("could not send to bootstrap", zap.String("addr", addr), zap.Error(err))
 		}
 	}
@@ -96,7 +104,7 @@ func (nd *DHT) refresh() {
 
 		// announce our peer info to the closest peers
 		for _, closestPeer := range closestPeers {
-			if err := nd.exchange.Send(ctx, peerInfo, closestPeer.Address()); err != nil {
+			if err := nd.exchange.Send(ctx, peerInfo.ToObject(), closestPeer.Address()); err != nil {
 				logger.Debug("refresh could not announce", zap.Error(err), zap.String("peerID", closestPeer.Thumbprint()))
 			}
 		}
@@ -109,17 +117,37 @@ func (nd *DHT) refresh() {
 	}
 }
 
-func (nd *DHT) handleBlock(block interface{}) error {
-	switch v := block.(type) {
-	case *PeerInfoRequest:
+func (nd *DHT) handleBlock(o *encoding.Object) error {
+	switch o.GetType() {
+	case typePeerInfoRequest:
+		v := &PeerInfoRequest{}
+		if err := v.FromObject(o); err != nil {
+			return err
+		}
 		nd.handlePeerInfoRequest(v)
-	case *PeerInfoResponse:
+	case typePeerInfoResponse:
+		v := &PeerInfoResponse{}
+		if err := v.FromObject(o); err != nil {
+			return err
+		}
 		nd.handlePeerInfoResponse(v)
-	case *ProviderRequest:
+	case typeProviderRequest:
+		v := &ProviderRequest{}
+		if err := v.FromObject(o); err != nil {
+			return err
+		}
 		nd.handleProviderRequest(v)
-	case *ProviderResponse:
+	case typeProviderResponse:
+		v := &ProviderResponse{}
+		if err := v.FromObject(o); err != nil {
+			return err
+		}
 		nd.handleProviderResponse(v)
-	case *peers.PeerInfo:
+	case typePeerInfo:
+		v := &peers.PeerInfo{}
+		if err := v.FromObject(o); err != nil {
+			return err
+		}
 		nd.handlePeerInfo(v)
 	default:
 		return nil
@@ -155,14 +183,13 @@ func (nd *DHT) handlePeerInfoRequest(payload *PeerInfoRequest) {
 	}
 
 	signer := nd.addressBook.GetLocalPeerKey()
-	sig, err := crypto.Sign(resp, signer)
+	signedResp, err := crypto.Sign(resp.ToObject(), signer)
 	if err != nil {
 		// TODO log error
 		return
 	}
-	resp.Signature = sig
-	addr := "peer:" + payload.Signature.Key.Thumbprint()
-	if err := nd.exchange.Send(ctx, resp, addr); err != nil {
+	addr := "peer:" + payload.RawObject.HashBase58()
+	if err := nd.exchange.Send(ctx, signedResp, addr); err != nil {
 		logger.Debug("handleProviderRequest could not send block", zap.Error(err))
 		return
 	}
@@ -219,14 +246,13 @@ func (nd *DHT) handleProviderRequest(payload *ProviderRequest) {
 	}
 
 	signer := nd.addressBook.GetLocalPeerKey()
-	addr := "peer:" + payload.Signature.Key.Thumbprint()
-	sig, err := crypto.Sign(resp, signer)
+	addr := "peer:" + payload.Signer.HashBase58()
+	signedResp, err := crypto.Sign(resp.ToObject(), signer)
 	if err != nil {
 		// TODO log error
 		return
 	}
-	resp.Signature = sig
-	if err := nd.exchange.Send(ctx, resp, addr); err != nil {
+	if err := nd.exchange.Send(ctx, signedResp, addr); err != nil {
 		logger.Warn("handleProviderRequest could not send block", zap.Error(err))
 		return
 	}
@@ -346,18 +372,17 @@ func (nd *DHT) PutProviders(ctx context.Context, key string) error {
 		BlockIDs: []string{key},
 	}
 	signer := nd.addressBook.GetLocalPeerKey()
-	sig, err := crypto.Sign(provider, signer)
+	signedProvider, err := crypto.Sign(provider.ToObject(), signer)
 	if err != nil {
 		return err
 	}
-	provider.Signature = sig
 	if err := nd.store.PutProvider(provider); err != nil {
 		return err
 	}
 
 	closestPeers, _ := nd.FindPeersClosestTo(key, closestPeersToReturn)
 	for _, closestPeer := range closestPeers {
-		if err := nd.exchange.Send(ctx, provider, closestPeer.Address()); err != nil {
+		if err := nd.exchange.Send(ctx, signedProvider, closestPeer.Address()); err != nil {
 			logger.Debug("put providers could not send", zap.Error(err), zap.String("peerID", closestPeer.Thumbprint()))
 		}
 	}
@@ -389,8 +414,7 @@ func (nd *DHT) GetProviders(ctx context.Context, key string) (chan *crypto.Key, 
 				switch v := payload.(type) {
 				case *Provider:
 					// TODO do we need to check payload and id?
-					// TODO Provider is not signed -- we don't seem to be storing the signature
-					out <- v.Signature.Key
+					out <- v.Signer
 				}
 			case <-time.After(maxQueryTime):
 				return
@@ -418,7 +442,7 @@ func (nd *DHT) GetAllProviders() (map[string][]string, error) {
 			if provider.Signature == nil {
 				continue
 			}
-			allProviders[blockID] = append(allProviders[blockID], provider.Signature.Key.Thumbprint())
+			allProviders[blockID] = append(allProviders[blockID], provider.Signer.HashBase58())
 		}
 	}
 	return allProviders, nil

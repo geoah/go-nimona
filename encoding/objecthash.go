@@ -67,7 +67,7 @@ func hashValue(o interface{}) []byte {
 		if !ok {
 			panic("hashing only supports map[string]interface{}")
 		}
-		o := NewObject(m)
+		o := NewObjectFromMap(m)
 		h, err := ObjectHash(o)
 		if err != nil {
 			panic("hashing error: " + err.Error())

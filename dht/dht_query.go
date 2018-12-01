@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 
 	"nimona.io/go/crypto"
+	"nimona.io/go/encoding"
 	"nimona.io/go/log"
 	"nimona.io/go/peers"
 )
@@ -125,46 +126,40 @@ func (q *query) next() {
 		if _, ok := q.contactedPeers.Load(peerInfo.Thumbprint()); ok {
 			continue
 		}
-		peersToAsk = append(peersToAsk, peerInfo.Signature.Key)
+		peersToAsk = append(peersToAsk, peerInfo.SignerKey)
 		q.contactedPeers.Store(peerInfo.Thumbprint(), true)
 	}
 
 	signer := q.dht.addressBook.GetLocalPeerKey()
 
-	var block interface{}
+	var o *encoding.Object
 	switch q.queryType {
 	case PeerInfoQuery:
 		req := &PeerInfoRequest{
 			RequestID: q.id,
 			PeerID:    q.key,
 		}
-		sig, err := crypto.Sign(block, signer)
-		if err != nil {
-			return
-		}
-		req.Signature = sig
-		block = req
+		o, err = crypto.Sign(req.ToObject(), signer)
 	case ProviderQuery:
 		req := &ProviderRequest{
 			RequestID: q.id,
 			Key:       q.key,
 		}
-		sig, err := crypto.Sign(block, signer)
-		if err != nil {
-			return
-		}
-		req.Signature = sig
-		block = req
+		o, err = crypto.Sign(req.ToObject(), signer)
 	default:
+		return
+	}
+
+	if err != nil {
 		return
 	}
 
 	ctx := context.Background()
 	logger := log.Logger(ctx)
 	for _, peer := range peersToAsk {
-		addr := "peer:" + peer.Thumbprint()
-		if err := q.dht.exchange.Send(ctx, block, addr); err != nil {
-			logger.Debug("query next could not send", zap.Error(err), zap.String("peerID", peer.Thumbprint()))
+		addr := "peer:" + peer.HashBase58()
+		if err := q.dht.exchange.Send(ctx, o, addr); err != nil {
+			logger.Debug("query next could not send", zap.Error(err), zap.String("peerID", peer.HashBase58()))
 		}
 	}
 }

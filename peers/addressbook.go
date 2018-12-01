@@ -67,6 +67,21 @@ func (ab *AddressBook) GetLocalPeerKey() *crypto.Key {
 	return ab.localKey
 }
 
+// HandleObject of any type
+// func (ab *AddressBook) HandleObject(o *encoding.Object) error {
+// 	switch o.GetType() {
+// 	case "nimona.io/peer.info":
+// 		v, err := NewPeerInfoFromObject(o)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		if err := ab.PutPeerInfo(v); err != nil {
+// 			return err
+// 		}
+// 	}
+// 	return nil
+// }
+
 // PutPeerInfo stores an block with a peer payload
 func (ab *AddressBook) PutPeerInfo(peerInfo *PeerInfo) error {
 	if peerInfo.Thumbprint() == ab.GetLocalPeerInfo().Thumbprint() {

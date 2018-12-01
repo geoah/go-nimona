@@ -6,6 +6,7 @@ import (
 	"math/big"
 
 	"github.com/pkg/errors"
+	"nimona.io/go/encoding"
 )
 
 // Supported values for KeyType
@@ -25,6 +26,8 @@ const (
 	P521 string = "P-521"
 )
 
+//go:generate go run nimona.io/go/cmd/objectify -schema /key -type Key -out key_generated.go
+
 // Key defines the minimal interface for each of the
 // key types.
 type Key struct {
@@ -41,13 +44,32 @@ type Key struct {
 	X                      []byte `json:"x,omitempty"`
 	Y                      []byte `json:"y,omitempty"`
 	D                      []byte `json:"d,omitempty"`
-	key                    interface{}
+
+	RawObject *encoding.Object `json:"@"`
 }
 
-// func (k *Key) Thumbprint() string {
-// 	b, _ := encoding.Marshal(k)
-// 	return base58.Encode(b)
-// }
+// NewKeyFromObject returns a key from an object
+func NewKeyFromObject(o *encoding.Object) (*Key, error) {
+	// TODO check type?
+	p := &Key{}
+	if err := o.Unmarshal(p); err != nil {
+		return nil, err
+	}
+
+	p.RawObject = o
+
+	return p, nil
+}
+
+// Hash of the key
+func (k *Key) Hash() []byte {
+	return k.ToObject().Hash()
+}
+
+// HashBase58 of the key
+func (k *Key) HashBase58() string {
+	return k.ToObject().HashBase58()
+}
 
 // GetPublicKey returns the public key
 func (k *Key) GetPublicKey() *Key {
@@ -112,9 +134,7 @@ func NewKey(k interface{}) (*Key, error) {
 		return nil, errors.New("missing key")
 	}
 
-	key := &Key{
-		key: k,
-	}
+	key := &Key{}
 
 	switch v := k.(type) {
 	// case *rsa.PrivateKey:

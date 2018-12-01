@@ -78,17 +78,17 @@ func (api *API) HandlePostBlock(c *gin.Context) {
 	}
 
 	signer := api.addressBook.GetLocalPeerKey()
-	sig, err := crypto.NewSignature(req, signer)
+	o := encoding.NewObjectFromMap(req)
+	so, err := crypto.Sign(o, signer)
 	if err != nil {
-		c.AbortWithError(500, err)
+		c.AbortWithError(500, errors.New("could not sign object"))
 		return
 	}
-	req["@sig"] = sig
 
 	ctx := context.Background()
 	for _, recipient := range subjects {
 		addr := "peer:" + recipient
-		if err := api.exchange.Send(ctx, req, addr); err != nil {
+		if err := api.exchange.Send(ctx, so, addr); err != nil {
 			c.AbortWithError(500, err)
 			return
 		}

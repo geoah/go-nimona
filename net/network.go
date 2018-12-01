@@ -87,10 +87,11 @@ func (n *Network) Dial(ctx context.Context, address string) (*Connection, error)
 
 		signer := n.addressBook.GetLocalPeerKey()
 		nonce := RandStringBytesMaskImprSrc(8)
-		syn := encoding.NewObject(map[string]interface{}{
-			"nonce": nonce,
-		})
-		signedSyn, err := crypto.Sign(syn, signer)
+		syn := &HandshakeSyn{
+			Nonce:    nonce,
+			PeerInfo: n.addressBook.GetLocalPeerInfo(),
+		}
+		signedSyn, err := crypto.Sign(syn.ToObject(), signer)
 		if err != nil {
 			return nil, err
 		}
@@ -99,25 +100,30 @@ func (n *Network) Dial(ctx context.Context, address string) (*Connection, error)
 			return nil, err
 		}
 
-		synAck, err := Read(conn)
+		synAckObj, err := Read(conn)
 		if err != nil {
 			return nil, err
 		}
 
-		if synAck.GetRaw("nonce") != nonce {
+		synAck := &HandshakeSynAck{}
+		if err := synAck.FromObject(synAckObj); err != nil {
+			return nil, err
+		}
+
+		if synAck.Nonce != nonce {
 			return nil, errors.New("invalid handhshake.syn-ack")
 		}
 
 		// store who is on the other side - peer id
-		conn.RemoteID = synAck.SignerKey().HashBase58()
+		conn.RemoteID = synAck.RawObject.GetSignerKey().HashBase58()
 		if err := n.addressBook.PutPeerInfo(synAck.PeerInfo); err != nil {
 			log.DefaultLogger.Panic("could not add remote peer", zap.Error(err))
 		}
 
-		ack := encoding.NewObject(map[string]interface{}{
-			"nonce": nonce,
-		})
-		signedAck, err := crypto.Sign(ack, signer)
+		ack := &HandshakeAck{
+			Nonce: nonce,
+		}
+		signedAck, err := crypto.Sign(ack.ToObject(), signer)
 		if err != nil {
 			return nil, err
 		}
@@ -198,23 +204,15 @@ func (n *Network) Listen(ctx context.Context, address string) (chan *Connection,
 				RemoteID: "unknown: handshaking",
 			}
 
-			syn, err := Read(conn)
+			synObj, err := Read(conn)
 			if err != nil {
 				log.DefaultLogger.Warn("waiting for syn failed", zap.Error(err))
 				// TODO close conn?
 				continue
 			}
 
-			// TODO check type
-
-			noncei := syn.GetRaw("nonce")
-			if noncei == nil {
-				// TODO close conn?
-				continue
-			}
-
-			nonce, ok := noncei.(string)
-			if !ok {
+			syn := &HandshakeSyn{}
+			if err := syn.FromObject(synObj); err != nil {
 				// TODO close conn?
 				continue
 			}
@@ -225,42 +223,41 @@ func (n *Network) Listen(ctx context.Context, address string) (chan *Connection,
 			}
 
 			synAck := &HandshakeSynAck{
-				Nonce:    nonce,
+				Nonce:    syn.Nonce,
 				PeerInfo: n.addressBook.GetLocalPeerInfo(),
 			}
-			sig, err := crypto.Sign(synAck, signer)
+			singedSynAck, err := crypto.Sign(synAck.ToObject(), signer)
 			if err != nil {
 				log.DefaultLogger.Warn("could not sigh for syn ack block", zap.Error(err))
 				// TODO close conn?
 				continue
 			}
-			synAck.Signature = sig
-			if err := Write(synAck, conn); err != nil {
+			if err := Write(singedSynAck, conn); err != nil {
 				log.DefaultLogger.Warn("sending for syn-ack failed", zap.Error(err))
 				// TODO close conn?
 				continue
 			}
 
-			ackIf, err := Read(conn)
+			ackObj, err := Read(conn)
 			if err != nil {
 				log.DefaultLogger.Warn("waiting for ack failed", zap.Error(err))
 				// TODO close conn?
 				continue
 			}
 
-			ack, ok := ackIf.(*HandshakeAck)
-			if !ok {
+			ack := &HandshakeSynAck{}
+			if err := ack.FromObject(ackObj); err != nil {
 				// TODO close conn?
 				continue
 			}
 
-			if ack.Nonce != nonce {
+			if ack.Nonce != syn.Nonce {
 				log.DefaultLogger.Warn("validating syn to ack nonce failed")
 				// TODO close conn?
 				continue
 			}
 
-			conn.RemoteID = ack.Signature.Key.Thumbprint()
+			conn.RemoteID = ack.RawObject.GetSignerKey().HashBase58()
 			cconn <- conn
 		}
 	}()
@@ -268,14 +265,14 @@ func (n *Network) Listen(ctx context.Context, address string) (chan *Connection,
 	return cconn, nil
 }
 
-func Write(p interface{}, conn *Connection) error {
+func Write(o *encoding.Object, conn *Connection) error {
 	conn.Conn.SetWriteDeadline(time.Now().Add(time.Second))
-	if p == nil {
+	if o == nil {
 		log.DefaultLogger.Error("block for fw cannot be nil")
 		return errors.New("missing block")
 	}
 
-	b, err := encoding.Marshal(p)
+	b, err := encoding.Marshal(o)
 	if err != nil {
 		return err
 	}
@@ -286,7 +283,7 @@ func Write(p interface{}, conn *Connection) error {
 
 	SendBlockEvent(
 		"incoming",
-		encoding.GetType(p),
+		o.GetType(),
 		len(b),
 	)
 
@@ -303,9 +300,8 @@ func Read(conn *Connection) (*encoding.Object, error) {
 	logger := log.DefaultLogger
 
 	pDecoder := ucodec.NewDecoder(conn.Conn, encoding.RawCborHandler())
-	// r := ucodec.Raw{}
-	m := map[string]interface{}{}
-	if err := pDecoder.Decode(&m); err != nil {
+	r := &ucodec.Raw{}
+	if err := pDecoder.Decode(r); err != nil {
 		return nil, err
 	}
 
@@ -316,7 +312,7 @@ func Read(conn *Connection) (*encoding.Object, error) {
 		}
 	}()
 
-	v, err := encoding.Unmarshal(r)
+	o, err := encoding.NewObjectFromBytes([]byte(*r))
 	if err != nil {
 		return nil, err
 	}
@@ -337,15 +333,15 @@ func Read(conn *Connection) (*encoding.Object, error) {
 
 	SendBlockEvent(
 		"incoming",
-		encoding.GetType(v),
+		o.GetType(),
 		pDecoder.NumBytesRead(),
 	)
 	if os.Getenv("DEBUG_BLOCKS") == "true" {
-		b, _ := encoding.Marshal(v)
+		b, _ := encoding.Marshal(o)
 		m := map[string]interface{}{}
 		encoding.UnmarshalSimple(b, &m)
 		b, _ = json.MarshalIndent(m, "", "  ")
 		logger.Info(string(b), zap.String("remoteID", conn.RemoteID), zap.String("direction", "incoming"))
 	}
-	return v, nil
+	return o, nil
 }

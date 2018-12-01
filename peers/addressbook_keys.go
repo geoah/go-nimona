@@ -33,8 +33,10 @@ func (ab *AddressBook) loadConfig(configPath string) error {
 		if err != nil {
 			return err
 		}
-		key, err := o.Materialize()
-		ab.localKey = key.(*crypto.Key)
+		ab.localKey = &crypto.Key{}
+		if err := o.Unmarshal(ab.localKey); err != nil {
+			return err
+		}
 		return nil
 	}
 

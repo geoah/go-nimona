@@ -4,9 +4,15 @@ import (
 	"nimona.io/go/base58"
 )
 
+// Typed interface
+type Typed interface {
+	Type() string
+}
+
 // Object for everything f12n
 type Object struct {
 	data      map[string]interface{}
+	bytes     []byte
 	ctx       string
 	policy    *Object
 	authority *Object
@@ -14,50 +20,58 @@ type Object struct {
 	signature *Object
 }
 
+// NewObjectFromBytes returns an object from a cbor byte stream
+func NewObjectFromBytes(b []byte) (*Object, error) {
+	m := map[string]interface{}{}
+	if err := UnmarshalSimple(b, &m); err != nil {
+		return nil, err
+	}
+
+	o := NewObjectFromMap(m)
+	o.bytes = b
+	return o, nil
+}
+
 // NewObjectFromStruct returns an object from a struct
 func NewObjectFromStruct(v interface{}) (*Object, error) {
-	m, err := Encode(v, true)
+	b, err := MarshalSimple(v)
 	if err != nil {
 		return nil, err
 	}
 
-	tm, err := TypeMap(m)
+	o, err := NewObjectFromBytes(b)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewObject(tm), nil
+	if vt, ok := v.(Typed); ok {
+		o.SetType(vt.Type())
+	}
+
+	return o, nil
 }
 
 // NewObject returns an object from a map
-func NewObject(m map[string]interface{}) *Object {
+func NewObject() *Object {
 	o := &Object{
 		data: map[string]interface{}{},
-	}
-	for k, v := range m {
-		o.SetRaw(k, v)
 	}
 	return o
 }
 
-// Materialize returns a populated struct based on the registered type
-// func (o *Object) Materialize() (interface{}, error) {
-// 	m := o.Map()
-// 	um, err := UntypeMap(m)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+// NewObjectFromMap returns an object from a map
+func NewObjectFromMap(m map[string]interface{}) *Object {
+	o := NewObject()
+	o.FromMap(m)
+	return o
+}
 
-// 	v := GetInstance(GetType(um))
-// 	if v == nil {
-// 		v = &map[string]interface{}{}
-// 	}
-// 	if err := Decode(um, v, true); err != nil {
-// 		return nil, err
-// 	}
-
-// 	return v, nil
-// }
+// FromMap inits the object from a map
+func (o *Object) FromMap(m map[string]interface{}) {
+	for k, v := range m {
+		o.SetRaw(k, v)
+	}
+}
 
 // Hash returns the object's hash
 func (o *Object) Hash() []byte {
@@ -71,57 +85,66 @@ func (o *Object) HashBase58() string {
 
 // Map returns the object as a map
 func (o *Object) Map() map[string]interface{} {
-	return o.data
+	m := map[string]interface{}{}
+	for k, v := range o.data {
+		// TODO check the type hint first maybe?
+		if o, ok := v.(*Object); ok {
+			m[k] = o.Map()
+		} else {
+			m[k] = v
+		}
+	}
+	return m
 }
 
-// Type returns the object's type
-func (o *Object) Type() string {
+// GetType returns the object's type
+func (o *Object) GetType() string {
 	return o.ctx
 }
 
 // SetType sets the object's type
 func (o *Object) SetType(v string) {
-	o.ctx = v
+	o.SetRaw("@ctx:s", v)
 }
 
-// Signature returns the object's signature, or nil
-func (o *Object) Signature() *Object {
+// GetSignature returns the object's signature, or nil
+func (o *Object) GetSignature() *Object {
 	return o.signature
 }
 
 // SetSignature sets the object's signature
 func (o *Object) SetSignature(v *Object) {
-	o.signature = v
+	o.SetRaw("@sig:O", v)
 }
 
-// AuthorityKey returns the object's creator, or nil
-func (o *Object) AuthorityKey() *Object {
+// GetAuthorityKey returns the object's creator, or nil
+func (o *Object) GetAuthorityKey() *Object {
 	return o.authority
 }
 
 // SetAuthorityKey sets the object's creator
 func (o *Object) SetAuthorityKey(v *Object) {
-	o.authority = v
+	o.SetRaw("@authority:O", v)
 }
 
-// SignerKey returns the object's signer, or nil
-func (o *Object) SignerKey() *Object {
+// GetSignerKey returns the object's signer, or nil
+func (o *Object) GetSignerKey() *Object {
 	return o.signer
 }
 
 // SetSignerKey sets the object's signer
 func (o *Object) SetSignerKey(v *Object) {
-	o.signer = v
+	o.SetRaw("@signer:O", v)
 }
 
-// Policy returns the object's policy, or nil
-func (o *Object) Policy() *Object {
+// GetPolicy returns the object's policy, or nil
+func (o *Object) GetPolicy() *Object {
 	return o.policy
 }
 
 // SetPolicy sets the object's policy
 func (o *Object) SetPolicy(v *Object) {
-	o.policy = v
+	o.SetRaw("@policy:O", v)
 }
 
 // GetRaw -
@@ -142,12 +165,14 @@ func (o *Object) SetRaw(k string, v interface{}) {
 	// add type hint if not already set
 	et := getFullType(k)
 	if et == "" {
-		k += ":" + getTypeHint(v)
+		k += ":" + GetHintFromType(v)
 	}
 
-	// clear the signature as it has been invalidated
-	delete(o.data, "@sig")
-	o.signature = nil
+	if mv, ok := v.(map[string]interface{}); ok {
+		if t, ok := mv["@ctx:s"]; ok && t != "" {
+			v = NewObjectFromMap(mv)
+		}
+	}
 
 	// add the attribute in the data map
 	o.data[k] = v
@@ -166,24 +191,37 @@ func (o *Object) SetRaw(k string, v interface{}) {
 		if !ok {
 			panic("invalid type for @policy")
 		}
-		o.policy = NewObject(m)
+		o.policy = NewObjectFromMap(m)
 	case "@authority":
 		m, ok := v.(map[string]interface{})
 		if !ok {
 			panic("invalid type for @authority")
 		}
-		o.authority = NewObject(m)
+		o.authority = NewObjectFromMap(m)
 	case "@signer":
 		m, ok := v.(map[string]interface{})
 		if !ok {
 			panic("invalid type for @signer")
 		}
-		o.signer = NewObject(m)
+		o.signer = NewObjectFromMap(m)
 	case "@sig":
 		m, ok := v.(map[string]interface{})
 		if !ok {
 			panic("invalid type for @sig")
 		}
-		o.signature = NewObject(m)
+		o.signature = NewObjectFromMap(m)
 	}
+}
+
+// Unmarshal the object into a given interface
+func (o *Object) Unmarshal(v interface{}) error {
+	if o.bytes == nil || len(o.bytes) == 0 {
+		b, err := MarshalSimple(o.data)
+		if err != nil {
+			return err
+		}
+		o.bytes = b
+	}
+
+	return UnmarshalSimple(o.bytes, v)
 }

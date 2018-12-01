@@ -24,11 +24,28 @@ const (
 	AlgorithmObjectHash = "OH_ES256"
 )
 
+//go:generate go run nimona.io/go/cmd/objectify -schema /signature -type Signature -out signature_generated.go
+
 // Signature block (container), currently supports only ES256
 type Signature struct {
+	RawObject *encoding.Object `json:"-"`
+
 	Alg string `json:"alg"`
 	R   []byte `json:"r"`
 	S   []byte `json:"s"`
+}
+
+// NewSignatureFromObject returns a signature from an object
+func NewSignatureFromObject(o *encoding.Object) (*Signature, error) {
+	// TODO check type?
+	p := &Signature{}
+	if err := o.Unmarshal(p); err != nil {
+		return nil, err
+	}
+
+	p.RawObject = o
+
+	return p, nil
 }
 
 // NewSignature returns a signature given some bytes and a private key

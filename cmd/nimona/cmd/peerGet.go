@@ -22,8 +22,13 @@ var peerGetCmd = &cobra.Command{
 		}
 
 		body := resp.Body()
+		o, err := encoding.NewObjectFromBytes(body)
+		if err != nil {
+			return err
+		}
+
 		peer := &peers.PeerInfo{}
-		if err := encoding.UnmarshalInto(body, peer); err != nil {
+		if err := peer.FromObject(o); err != nil {
 			return err
 		}
 

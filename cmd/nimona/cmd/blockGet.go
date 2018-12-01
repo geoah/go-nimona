@@ -5,7 +5,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"nimona.io/go/crypto"
 	"nimona.io/go/encoding"
 )
 
@@ -22,13 +21,13 @@ var blockGetCmd = &cobra.Command{
 		}
 
 		body := resp.Body()
-		block := map[string]interface{}{}
-		if err := encoding.UnmarshalInto(body, &block); err != nil {
+		o, err := encoding.NewObjectFromBytes(body)
+		if err != nil {
 			return err
 		}
 
 		if returnRaw {
-			bs, err := json.MarshalIndent(block, "", "  ")
+			bs, err := json.MarshalIndent(o.Map(), "", "  ")
 			if err != nil {
 				return err
 			}
@@ -38,8 +37,8 @@ var blockGetCmd = &cobra.Command{
 		}
 
 		cmd.Println("block:")
-		cmd.Println("  _id:", crypto.ID(block))
-		for k, v := range block {
+		cmd.Println("  _id:", o.HashBase58())
+		for k, v := range o.Map() {
 			cmd.Printf("  %s: %v\n", k, v)
 		}
 		cmd.Println("")
