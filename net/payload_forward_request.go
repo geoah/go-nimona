@@ -8,5 +8,5 @@ import (
 type ForwardRequest struct {
 	Recipient string            `json:"recipient"` // address
 	FwBlock   interface{}       `json:"recipient"`
-	Signature *crypto.Signature `json:"@sig"`
+	Signature *crypto.Signature `json:"@sig:O"`
 }

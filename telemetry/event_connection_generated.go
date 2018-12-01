@@ -10,7 +10,6 @@ import (
 
 // ToMap returns a map compatible with f12n
 func (s ConnectionEvent) ToMap() map[string]interface{} {
-
 	m := map[string]interface{}{
 		"@ctx:s":      "nimona.io/telemetry/connection",
 		"direction:s": s.Direction,

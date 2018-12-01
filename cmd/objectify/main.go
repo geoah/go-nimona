@@ -75,6 +75,7 @@ type Field struct {
 	Hint     string
 	IsObject bool
 	IsSlice  bool
+	CanBeNil bool
 }
 
 func (gen *Generator) process() (code []byte, err error) {
@@ -165,8 +166,17 @@ func (gen *Generator) process() (code []byte, err error) {
 			vf.IsObject = true
 		}
 
+		if vf.TypePtr[0] == '*' {
+			vf.CanBeNil = true
+		}
+
+		if _, ok := f.Type().(*types.Map); ok {
+			vf.CanBeNil = true
+		}
+
 		if fi, ok := f.Type().(*types.Slice); ok {
 			vf.IsSlice = true
+			vf.CanBeNil = true
 			if _, ok := fi.Elem().(*types.Basic); ok && vf.IsSlice {
 				vf.Type = "[]" + vf.Type
 				vf.TypePtr = "[]" + vf.TypePtr
@@ -203,11 +213,11 @@ func (s {{ .StructName }}) ToMap() map[string]interface{} {
 	}
 	{{- end }}
 	{{- end }}
-
 	m := map[string]interface{}{
 		"@ctx:s": "{{ .Schema }}",
 		{{- range .StructFields }}
 		{{- if eq .Tag "@" }}
+		{{- else if .CanBeNil }}
 		{{- else if and .IsObject .IsSlice }}
 		"{{ .Tag }}:{{ .Hint }}": s{{ .Name }},
 		{{- else if .IsObject }}
@@ -217,6 +227,18 @@ func (s {{ .StructName }}) ToMap() map[string]interface{} {
 		{{- end }}
 		{{- end }}
 	}
+	{{- range .StructFields }}
+	{{- if eq .Tag "@" }}
+	{{- else if .CanBeNil }}
+	if s.{{ .Name }} != nil {
+		{{- if .IsObject }}
+		m["{{ .Tag }}:{{ .Hint }}"] = s.{{ .Name }}.ToMap()
+		{{- else }}
+		m["{{ .Tag }}:{{ .Hint }}"] = s.{{ .Name }}
+		{{- end }}
+	}
+	{{- end }}
+	{{- end }}
 	return m
 }
 

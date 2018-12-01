@@ -14,13 +14,18 @@ func (s Foo) ToMap() map[string]interface{} {
 	for _, v := range s.InnerFoos {
 		sInnerFoos = append(sInnerFoos, v.ToMap())
 	}
-
 	m := map[string]interface{}{
-		"@ctx:s":          "test/foo",
-		"bar:s":           s.Bar,
-		"bars:A<s>":       s.Bars,
-		"inner_foo:O":     s.InnerFoo.ToMap(),
-		"inner_foos:A<O>": sInnerFoos,
+		"@ctx:s": "test/foo",
+		"bar:s":  s.Bar,
+	}
+	if s.Bars != nil {
+		m["bars:A<s>"] = s.Bars
+	}
+	if s.InnerFoo != nil {
+		m["inner_foo:O"] = s.InnerFoo.ToMap()
+	}
+	if s.InnerFoos != nil {
+		m["inner_foos:A<O>"] = s.InnerFoos.ToMap()
 	}
 	return m
 }

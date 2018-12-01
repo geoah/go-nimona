@@ -16,15 +16,24 @@ func (s PeerInfoResponse) ToMap() map[string]interface{} {
 	for _, v := range s.ClosestPeers {
 		sClosestPeers = append(sClosestPeers, v.ToMap())
 	}
-
 	m := map[string]interface{}{
-		"@ctx:s":            "nimona.io/dht/peerinfo.response",
-		"requestID:s":       s.RequestID,
-		"peerInfo:O":        s.PeerInfo.ToMap(),
-		"closestPeers:A<O>": sClosestPeers,
-		"@signer:O":         s.Signer.ToMap(),
-		"@authority:O":      s.Authority.ToMap(),
-		"@sig:O":            s.Signature.ToMap(),
+		"@ctx:s":      "nimona.io/dht/peerinfo.response",
+		"requestID:s": s.RequestID,
+	}
+	if s.PeerInfo != nil {
+		m["peerInfo:O"] = s.PeerInfo.ToMap()
+	}
+	if s.ClosestPeers != nil {
+		m["closestPeers:A<O>"] = s.ClosestPeers.ToMap()
+	}
+	if s.Signer != nil {
+		m["@signer:O"] = s.Signer.ToMap()
+	}
+	if s.Authority != nil {
+		m["@authority:O"] = s.Authority.ToMap()
+	}
+	if s.Signature != nil {
+		m["@sig:O"] = s.Signature.ToMap()
 	}
 	return m
 }

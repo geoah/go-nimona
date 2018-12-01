@@ -10,16 +10,25 @@ import (
 
 // ToMap returns a map compatible with f12n
 func (s Mandate) ToMap() map[string]interface{} {
-
 	m := map[string]interface{}{
-		"@ctx:s":         "/mandate",
-		"authority:O":    s.Authority.ToMap(),
-		"subject:O":      s.Subject.ToMap(),
-		"description:s":  s.Description,
-		"resources:A<s>": s.Resources,
-		"actions:A<s>":   s.Actions,
-		"effect:s":       s.Effect,
-		"@sig:O":         s.Signature.ToMap(),
+		"@ctx:s":        "/mandate",
+		"description:s": s.Description,
+		"effect:s":      s.Effect,
+	}
+	if s.Authority != nil {
+		m["authority:O"] = s.Authority.ToMap()
+	}
+	if s.Subject != nil {
+		m["subject:O"] = s.Subject.ToMap()
+	}
+	if s.Resources != nil {
+		m["resources:A<s>"] = s.Resources
+	}
+	if s.Actions != nil {
+		m["actions:A<s>"] = s.Actions
+	}
+	if s.Signature != nil {
+		m["@sig:O"] = s.Signature.ToMap()
 	}
 	return m
 }

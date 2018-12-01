@@ -4,6 +4,6 @@ const (
 	decodeTag = "json"
 
 	attrCtx = "@ctx"
-	attrSig = "@sig"
+	attrSig = "@sig:O"
 	attrAnn = "@ann"
 )

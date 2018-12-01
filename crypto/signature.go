@@ -87,7 +87,7 @@ func NewSignature(key *Key, alg string, o *encoding.Object) (*Signature, error) 
 	// 	}
 
 	// 	// TODO replace ES256 with OH that should deal with removing the @sig
-	// 	delete(m, "@sig")
+	// 	delete(m, "@sig:O")
 
 	// 	b, err = encoding.Marshal(m)
 	// 	if err != nil {

@@ -10,7 +10,6 @@ import (
 
 // ToMap returns a map compatible with f12n
 func (s Key) ToMap() map[string]interface{} {
-
 	m := map[string]interface{}{
 		"@ctx:s":    "/key",
 		"alg:s":     s.Algorithm,
@@ -23,9 +22,15 @@ func (s Key) ToMap() map[string]interface{} {
 		"x5tS256:s": s.X509CertThumbprintS256,
 		"x5u:s":     s.X509URL,
 		"crv:s":     s.Curve,
-		"x:d":       s.X,
-		"y:d":       s.Y,
-		"d:d":       s.D,
+	}
+	if s.X != nil {
+		m["x:d"] = s.X
+	}
+	if s.Y != nil {
+		m["y:d"] = s.Y
+	}
+	if s.D != nil {
+		m["d:d"] = s.D
 	}
 	return m
 }

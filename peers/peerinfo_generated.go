@@ -11,12 +11,20 @@ import (
 
 // ToMap returns a map compatible with f12n
 func (s PeerInfo) ToMap() map[string]interface{} {
-
 	m := map[string]interface{}{
-		"@ctx:s":         "/peer",
-		"addresses:A<s>": s.Addresses,
-		"@authority:O":   s.AuthorityKey.ToMap(),
-		"@signer:O":      s.SignerKey.ToMap(),
+		"@ctx:s": "/peer",
+	}
+	if s.Addresses != nil {
+		m["addresses:A<s>"] = s.Addresses
+	}
+	if s.AuthorityKey != nil {
+		m["@authority:O"] = s.AuthorityKey.ToMap()
+	}
+	if s.SignerKey != nil {
+		m["@signer:O"] = s.SignerKey.ToMap()
+	}
+	if s.Signature != nil {
+		m["@sig:O"] = s.Signature.ToMap()
 	}
 	return m
 }
@@ -47,6 +55,14 @@ func (s *PeerInfo) FromMap(m map[string]interface{}) error {
 		}
 	} else if v, ok := m["@signer:O"].(*crypto.Key); ok {
 		s.SignerKey = v
+	}
+	if v, ok := m["@sig:O"].(map[string]interface{}); ok {
+		s.Signature = &crypto.Signature{}
+		if err := s.Signature.FromMap(v); err != nil {
+			return err
+		}
+	} else if v, ok := m["@sig:O"].(*crypto.Signature); ok {
+		s.Signature = v
 	}
 	return nil
 }

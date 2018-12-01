@@ -1,6 +1,8 @@
 package encoding
 
 import (
+	"fmt"
+
 	"nimona.io/go/base58"
 )
 
@@ -33,23 +35,23 @@ func NewObjectFromBytes(b []byte) (*Object, error) {
 }
 
 // NewObjectFromStruct returns an object from a struct
-func NewObjectFromStruct(v interface{}) (*Object, error) {
-	b, err := MarshalSimple(v)
-	if err != nil {
-		return nil, err
-	}
+// func NewObjectFromStruct(v interface{}) (*Object, error) {
+// 	b, err := MarshalSimple(v)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	o, err := NewObjectFromBytes(b)
-	if err != nil {
-		return nil, err
-	}
+// 	o, err := NewObjectFromBytes(b)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	if vt, ok := v.(Typed); ok {
-		o.SetType(vt.Type())
-	}
+// 	if vt, ok := v.(Typed); ok {
+// 		o.SetType(vt.Type())
+// 	}
 
-	return o, nil
-}
+// 	return o, nil
+// }
 
 // NewObject returns an object from a map
 func NewObject() *Object {
@@ -183,33 +185,49 @@ func (o *Object) SetRaw(k string, v interface{}) {
 	case "@ctx":
 		t, ok := v.(string)
 		if !ok {
-			panic("invalid type for @ctx")
+			panic(fmt.Errorf("invalid type %T for @ctx", v))
 		}
 		o.ctx = t
 	case "@policy":
-		m, ok := v.(map[string]interface{})
-		if !ok {
-			panic("invalid type for @policy")
+		if oi, ok := v.(*Object); ok {
+			o.policy = oi
+		} else if oi, ok := v.(objectable); ok {
+			o.policy = oi.ToObject()
+		} else if m, ok := v.(map[string]interface{}); ok {
+			o.policy = NewObjectFromMap(m)
+		} else {
+			panic(fmt.Errorf("invalid type %T for @policy", v))
 		}
-		o.policy = NewObjectFromMap(m)
 	case "@authority":
-		m, ok := v.(map[string]interface{})
-		if !ok {
-			panic("invalid type for @authority")
+		if oi, ok := v.(*Object); ok {
+			o.authority = oi
+		} else if oi, ok := v.(objectable); ok {
+			o.authority = oi.ToObject()
+		} else if m, ok := v.(map[string]interface{}); ok {
+			o.authority = NewObjectFromMap(m)
+		} else {
+			panic(fmt.Errorf("invalid type %T for @authority", v))
 		}
-		o.authority = NewObjectFromMap(m)
 	case "@signer":
-		m, ok := v.(map[string]interface{})
-		if !ok {
-			panic("invalid type for @signer")
+		if oi, ok := v.(*Object); ok {
+			o.signer = oi
+		} else if oi, ok := v.(objectable); ok {
+			o.signer = oi.ToObject()
+		} else if m, ok := v.(map[string]interface{}); ok {
+			o.signer = NewObjectFromMap(m)
+		} else {
+			panic(fmt.Errorf("invalid type %T for @signer", v))
 		}
-		o.signer = NewObjectFromMap(m)
-	case "@sig":
-		m, ok := v.(map[string]interface{})
-		if !ok {
-			panic("invalid type for @sig")
+	case "@sig:O":
+		if oi, ok := v.(*Object); ok {
+			o.signature = oi
+		} else if oi, ok := v.(objectable); ok {
+			o.signature = oi.ToObject()
+		} else if m, ok := v.(map[string]interface{}); ok {
+			o.signature = NewObjectFromMap(m)
+		} else {
+			panic(fmt.Errorf("invalid type %T for @sig", v))
 		}
-		o.signature = NewObjectFromMap(m)
 	}
 }
 

@@ -10,7 +10,6 @@ import (
 
 // ToMap returns a map compatible with f12n
 func (s HandshakeAck) ToMap() map[string]interface{} {
-
 	m := map[string]interface{}{
 		"@ctx:s":  "/handshake.ack",
 		"nonce:s": s.Nonce,

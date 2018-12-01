@@ -11,11 +11,12 @@ import (
 
 // ToMap returns a map compatible with f12n
 func (s HandshakeSyn) ToMap() map[string]interface{} {
-
 	m := map[string]interface{}{
-		"@ctx:s":     "/handshake.syn",
-		"nonce:s":    s.Nonce,
-		"peerInfo:O": s.PeerInfo.ToMap(),
+		"@ctx:s":  "/handshake.syn",
+		"nonce:s": s.Nonce,
+	}
+	if s.PeerInfo != nil {
+		m["peerInfo:O"] = s.PeerInfo.ToMap()
 	}
 	return m
 }

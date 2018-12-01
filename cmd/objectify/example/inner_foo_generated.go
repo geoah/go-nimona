@@ -14,30 +14,47 @@ func (s InnerFoo) ToMap() map[string]interface{} {
 	for _, v := range s.MoreInnerFoos {
 		sMoreInnerFoos = append(sMoreInnerFoos, v.ToMap())
 	}
-
 	m := map[string]interface{}{
-		"@ctx:s":          "test/inn",
-		"inner_bar:s":     s.InnerBar,
-		"inner_foos:A<O>": sMoreInnerFoos,
-		"i:i":             s.I,
-		"i8:i":            s.I8,
-		"i16:i":           s.I16,
-		"i32:i":           s.I32,
-		"i64:i":           s.I64,
-		"u:i":             s.U,
-		"u8:i":            s.U8,
-		"u16:i":           s.U16,
-		"u32:i":           s.U32,
-		"f32:f":           s.F32,
-		"f64:f":           s.F64,
-		"ai8:A<i>":        s.Ai8,
-		"ai16:A<i>":       s.Ai16,
-		"ai32:A<i>":       s.Ai32,
-		"ai64:A<i>":       s.Ai64,
-		"au16:A<i>":       s.Au16,
-		"au32:A<i>":       s.Au32,
-		"af32:A<f>":       s.Af32,
-		"af64:A<f>":       s.Af64,
+		"@ctx:s":      "test/inn",
+		"inner_bar:s": s.InnerBar,
+		"i:i":         s.I,
+		"i8:i":        s.I8,
+		"i16:i":       s.I16,
+		"i32:i":       s.I32,
+		"i64:i":       s.I64,
+		"u:i":         s.U,
+		"u8:i":        s.U8,
+		"u16:i":       s.U16,
+		"u32:i":       s.U32,
+		"f32:f":       s.F32,
+		"f64:f":       s.F64,
+	}
+	if s.MoreInnerFoos != nil {
+		m["inner_foos:A<O>"] = s.MoreInnerFoos.ToMap()
+	}
+	if s.Ai8 != nil {
+		m["ai8:A<i>"] = s.Ai8
+	}
+	if s.Ai16 != nil {
+		m["ai16:A<i>"] = s.Ai16
+	}
+	if s.Ai32 != nil {
+		m["ai32:A<i>"] = s.Ai32
+	}
+	if s.Ai64 != nil {
+		m["ai64:A<i>"] = s.Ai64
+	}
+	if s.Au16 != nil {
+		m["au16:A<i>"] = s.Au16
+	}
+	if s.Au32 != nil {
+		m["au32:A<i>"] = s.Au32
+	}
+	if s.Af32 != nil {
+		m["af32:A<f>"] = s.Af32
+	}
+	if s.Af64 != nil {
+		m["af64:A<f>"] = s.Af64
 	}
 	return m
 }

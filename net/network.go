@@ -277,22 +277,21 @@ func Write(o *encoding.Object, conn *Connection) error {
 		return err
 	}
 
+	if os.Getenv("DEBUG_BLOCKS") == "true" {
+		b, _ := json.MarshalIndent(o.Map(), "", "  ")
+		log.DefaultLogger.Info(string(b), zap.String("remoteID", conn.RemoteID), zap.String("direction", "outgoing"))
+	}
+
 	if _, err := conn.Conn.Write(b); err != nil {
 		return err
 	}
 
 	SendBlockEvent(
-		"incoming",
+		"outgoing",
 		o.GetType(),
 		len(b),
 	)
 
-	if os.Getenv("DEBUG_BLOCKS") == "true" {
-		m := map[string]interface{}{}
-		encoding.UnmarshalSimple(b, &m)
-		b, _ := json.MarshalIndent(m, "", "  ")
-		log.DefaultLogger.Info(string(b), zap.String("remoteID", conn.RemoteID), zap.String("direction", "outgoing"))
-	}
 	return nil
 }
 
@@ -337,10 +336,7 @@ func Read(conn *Connection) (*encoding.Object, error) {
 		pDecoder.NumBytesRead(),
 	)
 	if os.Getenv("DEBUG_BLOCKS") == "true" {
-		b, _ := encoding.Marshal(o)
-		m := map[string]interface{}{}
-		encoding.UnmarshalSimple(b, &m)
-		b, _ = json.MarshalIndent(m, "", "  ")
+		b, _ := json.MarshalIndent(o.Map(), "", "  ")
 		logger.Info(string(b), zap.String("remoteID", conn.RemoteID), zap.String("direction", "incoming"))
 	}
 	return o, nil

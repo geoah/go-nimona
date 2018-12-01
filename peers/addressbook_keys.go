@@ -6,6 +6,7 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -55,12 +56,7 @@ func (ab *AddressBook) loadConfig(configPath string) error {
 
 	ab.localKey = localKey
 
-	o, err := encoding.NewObjectFromStruct(localKey)
-	if err != nil {
-		return err
-	}
-
-	keyBytes, err := encoding.Marshal(o)
+	keyBytes, err := encoding.Marshal(localKey.ToObject())
 	if err != nil {
 		return err
 	}
@@ -97,6 +93,7 @@ func loadConfig(path string) (*config, error) {
 
 // storeConfig to a JSON encoded file
 func storeConfig(cfg *config, path string) error {
+	fmt.Println("____", cfg, path)
 	bc, _ := json.MarshalIndent(cfg, "", "  ")
 	return ioutil.WriteFile(path, bc, 0644)
 }

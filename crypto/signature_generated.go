@@ -10,12 +10,15 @@ import (
 
 // ToMap returns a map compatible with f12n
 func (s Signature) ToMap() map[string]interface{} {
-
 	m := map[string]interface{}{
 		"@ctx:s": "/signature",
 		"alg:s":  s.Alg,
-		"r:d":    s.R,
-		"s:d":    s.S,
+	}
+	if s.R != nil {
+		m["r:d"] = s.R
+	}
+	if s.S != nil {
+		m["s:d"] = s.S
 	}
 	return m
 }

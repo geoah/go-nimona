@@ -15,7 +15,7 @@ type Mandate struct {
 	Resources   []string   `json:"resources"`
 	Actions     []string   `json:"actions"`
 	Effect      string     `json:"effect"`
-	Signature   *Signature `json:"@sig"`
+	Signature   *Signature `json:"@sig:O"`
 }
 
 // NewMandate returns a signed mandate given an authority key, a subject key,

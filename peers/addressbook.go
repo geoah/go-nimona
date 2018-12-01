@@ -7,7 +7,6 @@ import (
 	"go.uber.org/zap"
 
 	"nimona.io/go/crypto"
-	"nimona.io/go/encoding"
 	"nimona.io/go/log"
 )
 
@@ -105,27 +104,20 @@ func (ab *AddressBook) PutPeerInfo(peerInfo *PeerInfo) error {
 func (ab *AddressBook) GetLocalPeerInfo() *PeerInfo {
 	addresses := ab.GetLocalPeerAddresses()
 
-	pi := &PeerInfo{
+	p := &PeerInfo{
 		Addresses: addresses,
 	}
 
-	o, err := encoding.NewObjectFromStruct(pi)
-	if err != nil {
-		return nil
-	}
-
-	sig, err := crypto.Sign(o, ab.GetLocalPeerKey())
+	spo, err := crypto.Sign(p.ToObject(), ab.GetLocalPeerKey())
 	if err != nil {
 		panic(err)
 	}
 
-	osig, err := encoding.NewObjectFromStruct(sig)
-	if err != nil {
+	if err := p.FromObject(spo); err != nil {
 		panic(err)
 	}
 
-	o.SetRaw("@sig", osig)
-	return pi
+	return p
 }
 
 // GetPeerInfo returns a peer info from its id
@@ -240,13 +232,9 @@ func (ab *AddressBook) SetAlias(k *crypto.Key, v string) {
 }
 
 func (ab *AddressBook) GetAlias(k *crypto.Key) string {
-	o, err := encoding.NewObjectFromStruct(k)
-	if err != nil {
-		panic(err)
-	}
 	v, ok := ab.aliases.Load(k)
-	if !ok {
-		return o.HashBase58()
+	if ok {
+		return v.(string)
 	}
-	return v.(string)
+	return k.HashBase58()
 }

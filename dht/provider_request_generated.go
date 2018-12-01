@@ -11,14 +11,19 @@ import (
 
 // ToMap returns a map compatible with f12n
 func (s ProviderRequest) ToMap() map[string]interface{} {
-
 	m := map[string]interface{}{
-		"@ctx:s":       "nimona.io/dht/provider.request",
-		"requestID:s":  s.RequestID,
-		"key:s":        s.Key,
-		"@signer:O":    s.Signer.ToMap(),
-		"@authority:O": s.Authority.ToMap(),
-		"@sig:O":       s.Signature.ToMap(),
+		"@ctx:s":      "nimona.io/dht/provider.request",
+		"requestID:s": s.RequestID,
+		"key:s":       s.Key,
+	}
+	if s.Signer != nil {
+		m["@signer:O"] = s.Signer.ToMap()
+	}
+	if s.Authority != nil {
+		m["@authority:O"] = s.Authority.ToMap()
+	}
+	if s.Signature != nil {
+		m["@sig:O"] = s.Signature.ToMap()
 	}
 	return m
 }
