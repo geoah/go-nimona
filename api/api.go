@@ -1,6 +1,9 @@
 package api
 
 import (
+	"net/http"
+	"syscall"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
@@ -20,11 +23,13 @@ type API struct {
 	dht         *dht.DHT
 	blockStore  storage.Storage
 	exchange    nnet.Exchange
+	token       string
 	localKey    string
 }
 
 // New HTTP API
-func New(addressBook *peers.AddressBook, dht *dht.DHT, exchange nnet.Exchange, bls storage.Storage) *API {
+func New(addressBook *peers.AddressBook, dht *dht.DHT, exchange nnet.Exchange,
+	bls storage.Storage, token string) *API {
 	router := gin.Default()
 	router.Use(cors.Default())
 
@@ -35,7 +40,10 @@ func New(addressBook *peers.AddressBook, dht *dht.DHT, exchange nnet.Exchange, b
 		blockStore:  bls,
 		exchange:    exchange,
 		localKey:    addressBook.GetLocalPeerInfo().Thumbprint(),
+		token:       token,
 	}
+
+	router.Use(api.TokenAuth())
 
 	local := router.Group("/api/v1/local")
 	local.GET("/", api.HandleGetLocal)
@@ -55,6 +63,8 @@ func New(addressBook *peers.AddressBook, dht *dht.DHT, exchange nnet.Exchange, b
 	streamsEnd := router.Group("/api/v1/streams")
 	streamsEnd.GET("/:ns/*pattern", api.HandleGetStreams)
 
+	router.POST("/api/v1/stop", api.Stop)
+
 	router.Use(ServeFs("/", Assets))
 
 	return api
@@ -63,6 +73,12 @@ func New(addressBook *peers.AddressBook, dht *dht.DHT, exchange nnet.Exchange, b
 // Serve HTTP API
 func (api *API) Serve(address string) error {
 	return api.router.Run(address)
+}
+
+func (api *API) Stop(c *gin.Context) {
+	c.Status(http.StatusOK)
+
+	syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
 }
 
 func (api *API) mapBlock(o *encoding.Object) map[string]interface{} {

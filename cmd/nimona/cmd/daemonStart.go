@@ -23,6 +23,7 @@ var (
 	daemonAPIPort        int
 	daemonEnableRelaying bool
 	daemonEnableMetrics  bool
+	apiToken             string
 
 	bootstrapAddresses = []string{
 		"tcp:andromeda.nimona.io:21013",
@@ -111,8 +112,16 @@ var daemonStartCmd = &cobra.Command{
 		}
 		cmd.Println("* HTTP API address:\n  *", apiAddress)
 
-		api := api.New(addressBook, dht, n, dpr)
-		err = api.Serve(peerAddress)
+		a := api.New(addressBook, dht, n, dpr, apiToken)
+
+		go func() {
+			if err := a.Serve(peerAddress); err != nil {
+				log.Fatal("Server stoping, error:", err)
+			}
+		}()
+
+		api.Wait()
+
 		return errors.Wrap(err, "http server stopped")
 	},
 }
@@ -153,5 +162,12 @@ func init() {
 		"bootstraps",
 		bootstrapAddresses,
 		"bootstrap addresses",
+	)
+
+	daemonStartCmd.PersistentFlags().StringVar(
+		&apiToken,
+		"api-token",
+		apiToken,
+		"api token",
 	)
 }
